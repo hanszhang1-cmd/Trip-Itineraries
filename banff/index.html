@@ -4,17 +4,807 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Banff Family Trip 🏔️</title>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <style>
-    body { font-family: -apple-system, sans-serif; background: #0e0e0e; color: #e8e8e8; display: flex; align-items: center; justify-content: center; height: 100vh; margin: 0; }
-    .msg { text-align: center; }
-    h1 { font-size: 28px; margin-bottom: 8px; }
-    p { color: #555; font-size: 14px; }
+    :root {
+      --bg: #0e0e0e;
+      --surface: #1a1a1a;
+      --surface2: #222;
+      --border: #2a2a2a;
+      --text: #e8e8e8;
+      --muted: #999;
+      --dim: #555;
+      --accent: #4ade80;
+      --accent-dim: rgba(74,222,128,.15);
+      --blue: #60a5fa;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: -apple-system, 'PingFang SC', 'Helvetica Neue', sans-serif; background: var(--bg); color: var(--text); }
+
+    /* ── HERO ── */
+    .hero {
+      background: linear-gradient(160deg, #0a1628 0%, #1a2f4a 50%, #0e3a2f 100%);
+      padding: 48px 20px 32px;
+      text-align: center;
+      position: relative;
+      border-bottom: 1px solid var(--border);
+    }
+    .hero h1 { font-size: 26px; font-weight: 700; margin-bottom: 6px; }
+    .hero .sub { color: var(--muted); font-size: 13px; margin-bottom: 4px; }
+    .hero .pax { font-size: 12px; color: var(--dim); letter-spacing: 1px; }
+    .lang-btn {
+      position: absolute; top: 16px; right: 16px;
+      background: var(--surface2); border: 1px solid var(--border);
+      color: var(--text); padding: 5px 14px; border-radius: 16px;
+      cursor: pointer; font-size: 12px; font-weight: 700; letter-spacing: .5px;
+      transition: all .2s;
+    }
+    .lang-btn:hover { background: var(--accent); color: #000; border-color: var(--accent); }
+
+    /* ── NAV ── */
+    .nav-bar {
+      position: sticky; top: 0; z-index: 100;
+      background: rgba(14,14,14,.96); backdrop-filter: blur(8px);
+      border-bottom: 1px solid var(--border);
+      overflow-x: auto; scrollbar-width: none;
+    }
+    .nav-bar::-webkit-scrollbar { display: none; }
+    .nav-inner { display: flex; gap: 2px; padding: 8px 12px; white-space: nowrap; min-width: max-content; }
+    .pill {
+      background: none; border: none; color: var(--muted);
+      padding: 6px 12px; border-radius: 16px; cursor: pointer;
+      font-size: 12px; font-weight: 500; transition: all .15s; white-space: nowrap;
+    }
+    .pill:hover { color: var(--text); background: var(--surface2); }
+    .pill.active { background: var(--accent-dim); color: var(--accent); font-weight: 600; }
+
+    /* ── LAYOUT ── */
+    main { max-width: 720px; margin: 0 auto; padding: 22px 14px 70px; }
+    section { margin-bottom: 48px; scroll-margin-top: 60px; }
+    .sec-title { font-size: 16px; font-weight: 700; margin-bottom: 14px; display: flex; align-items: center; gap: 8px; }
+
+    /* ── CARDS ── */
+    .card {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 12px; padding: 14px 16px; margin-bottom: 10px;
+    }
+    .card-row {
+      display: flex; justify-content: space-between; align-items: center;
+      font-size: 13px; padding: 7px 0; border-bottom: 1px solid var(--border);
+    }
+    .card-row:last-child { border-bottom: none; }
+    .card-label { color: var(--muted); }
+    .card-value { font-weight: 500; text-align: right; }
+
+    /* ── BADGES ── */
+    .badge { display: inline-block; font-size: 11px; padding: 2px 8px; border-radius: 8px; font-weight: 600; }
+    .bg { background: var(--accent-dim); color: var(--accent); }
+    .bb { background: rgba(96,165,250,.15); color: var(--blue); }
+    .by { background: rgba(251,191,36,.12); color: #fbbf24; }
+
+    /* ── FLIGHT CARD ── */
+    .flight-card {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 12px; padding: 14px 16px; margin-bottom: 10px;
+    }
+    .flight-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
+    .flight-route { display: flex; align-items: center; gap: 8px; margin-bottom: 10px; }
+    .iata { font-size: 26px; font-weight: 800; letter-spacing: 1px; }
+    .route-mid { flex: 1; text-align: center; }
+    .route-line { display: flex; align-items: center; color: var(--dim); font-size: 12px; }
+    .route-line::before, .route-line::after { content: ''; flex: 1; height: 1px; background: var(--border); margin: 0 4px; }
+    .city-label { font-size: 11px; color: var(--muted); margin-top: 2px; }
+    .city-label.right { text-align: right; }
+    .flight-tags { display: flex; flex-wrap: wrap; gap: 6px; }
+    .tag { font-size: 11px; color: var(--muted); background: var(--surface2); padding: 3px 8px; border-radius: 6px; }
+    .tag a { color: inherit; text-decoration: none; }
+    .tag a:hover { color: var(--accent); }
+
+    /* ── NOTICE ── */
+    .notice {
+      background: rgba(251,191,36,.07); border: 1px solid rgba(251,191,36,.2);
+      border-radius: 10px; padding: 10px 14px; font-size: 12px; color: #fbbf24; margin-bottom: 10px;
+    }
+
+    /* ── ITINERARY ── */
+    .day-block { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; margin-bottom: 10px; overflow: hidden; }
+    .day-hd { background: var(--surface2); padding: 10px 14px; display: flex; justify-content: space-between; align-items: center; }
+    .day-hd-left { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+    .day-num { font-weight: 700; font-size: 13px; }
+    .day-date { font-size: 12px; color: var(--muted); }
+    .day-special { font-size: 11px; color: var(--accent); }
+    .day-body { padding: 12px 14px; }
+    .ev { display: flex; gap: 12px; padding: 5px 0; }
+    .ev-time { font-size: 11px; color: var(--accent); min-width: 52px; padding-top: 2px; font-weight: 600; flex-shrink: 0; }
+    .ev-title { font-size: 13px; }
+    .ev-note { font-size: 11px; color: var(--muted); margin-top: 2px; line-height: 1.4; }
+
+    /* ── MAP ── */
+    #banff-map { height: 320px; border-radius: 12px; border: 1px solid var(--border); }
+
+    /* ── WEATHER ── */
+    .wx-scroll { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 4px; scrollbar-width: none; }
+    .wx-scroll::-webkit-scrollbar { display: none; }
+    .wx-cell { flex: 0 0 70px; background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 10px 6px; text-align: center; }
+    .wx-date { font-size: 10px; color: var(--muted); }
+    .wx-icon { font-size: 22px; margin: 4px 0; }
+    .wx-hi { font-size: 13px; font-weight: 700; }
+    .wx-lo { font-size: 11px; color: var(--muted); }
+    .wx-notice { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 20px; text-align: center; color: var(--muted); font-size: 13px; line-height: 1.5; }
+
+    /* ── GRID CARDS ── */
+    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    @media (max-width: 460px) { .grid-2 { grid-template-columns: 1fr; } }
+    .gc { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 12px 14px; }
+    .gc-name { font-size: 14px; font-weight: 600; margin-bottom: 3px; }
+    .gc-type { font-size: 11px; color: var(--accent); margin-bottom: 4px; }
+    .gc-desc { font-size: 12px; color: var(--muted); line-height: 1.4; }
+    a { color: inherit; text-decoration: none; }
+    a:hover { color: var(--accent); }
+
+    /* ── DRIVE TIMES ── */
+    .drive-row { display: flex; justify-content: space-between; padding: 5px 0; border-bottom: 1px solid var(--border); font-size: 12px; color: var(--muted); }
+    .drive-row:last-child { border-bottom: none; }
+
+    /* ── FOOTER ── */
+    footer { text-align: center; color: var(--dim); font-size: 12px; padding: 20px; border-top: 1px solid var(--border); }
   </style>
 </head>
 <body>
-  <div class="msg">
-    <h1>🏔️ Banff Family Trip</h1>
-    <p>Coming soon — details loading in…</p>
+
+<!-- HERO -->
+<div class="hero">
+  <button class="lang-btn" id="lang-btn" onclick="toggleLang()">中文</button>
+  <h1 id="hero-title">🏔️ Banff Family Trip</h1>
+  <div class="sub" id="hero-dates">June 29 – July 6, 2026 · Canmore & Banff, Alberta</div>
+  <div class="pax" id="hero-pax">JZ · YC · Hans</div>
+</div>
+
+<!-- NAV -->
+<nav class="nav-bar">
+  <div class="nav-inner" id="nav-inner">
+    <button class="pill active" data-section="flights" onclick="goTo('flights',this)">✈️ <span data-t="nav-flights">Flights</span></button>
+    <button class="pill" data-section="hotel" onclick="goTo('hotel',this)">🏨 <span data-t="nav-hotel">Hotel</span></button>
+    <button class="pill" data-section="car" onclick="goTo('car',this)">🚗 <span data-t="nav-car">Car</span></button>
+    <button class="pill" data-section="activities" onclick="goTo('activities',this)">🥾 <span data-t="nav-act">Activities</span></button>
+    <button class="pill" data-section="itinerary" onclick="goTo('itinerary',this)">📅 <span data-t="nav-itin">Itinerary</span></button>
+    <button class="pill" data-section="map-sec" onclick="goTo('map-sec',this)">🗺️ <span data-t="nav-map">Map</span></button>
+    <button class="pill" data-section="weather" onclick="goTo('weather',this)">🌤️ <span data-t="nav-wx">Weather</span></button>
+    <button class="pill" data-section="eats" onclick="goTo('eats',this)">🍽️ <span data-t="nav-eats">Eats</span></button>
   </div>
+</nav>
+
+<main>
+
+  <!-- ── FLIGHTS ── -->
+  <section id="flights">
+    <div class="sec-title">✈️ <span data-t="sec-flights">Flights</span></div>
+
+    <!-- Outbound all 3 -->
+    <div class="flight-card">
+      <div class="flight-header">
+        <span class="badge bb">WestJet · WS110</span>
+        <span class="badge bg" data-t="badge-all3">All 3 Travellers</span>
+      </div>
+      <div class="flight-route">
+        <div>
+          <div class="iata">YVR</div>
+          <div class="city-label" data-t="city-yvr">Vancouver</div>
+        </div>
+        <div class="route-mid">
+          <div class="route-line">→</div>
+        </div>
+        <div>
+          <div class="iata">YYC</div>
+          <div class="city-label right" data-t="city-yyc">Calgary</div>
+        </div>
+      </div>
+      <div class="flight-tags">
+        <span class="tag">📅 <span data-t="date-jun29">Mon, Jun 29</span></span>
+        <span class="tag">🛫 WestJet</span>
+        <span class="tag" data-t="dur-short">~1h 5m</span>
+      </div>
+    </div>
+
+    <!-- Parents return Jul 3 -->
+    <div class="flight-card">
+      <div class="flight-header">
+        <span class="badge bb">WestJet · WS129</span>
+        <span class="badge by" data-t="badge-parents">JZ & YC Return</span>
+      </div>
+      <div class="flight-route">
+        <div>
+          <div class="iata">YYC</div>
+          <div class="city-label" data-t="city-yyc">Calgary</div>
+        </div>
+        <div class="route-mid">
+          <div class="route-line">→</div>
+        </div>
+        <div>
+          <div class="iata">YVR</div>
+          <div class="city-label right" data-t="city-yvr">Vancouver</div>
+        </div>
+      </div>
+      <div class="flight-tags">
+        <span class="tag">📅 <span data-t="date-jul3">Fri, Jul 3</span></span>
+        <span class="tag">🛫 WestJet</span>
+        <span class="tag" data-t="dur-short">~1h 10m</span>
+      </div>
+    </div>
+
+    <!-- Hans return Jul 6 -->
+    <div class="flight-card">
+      <div class="flight-header">
+        <span class="badge bb">WestJet · WS179</span>
+        <span class="badge bg" data-t="badge-hans">Hans Return</span>
+      </div>
+      <div class="flight-route">
+        <div>
+          <div class="iata">YYC</div>
+          <div class="city-label" data-t="city-yyc">Calgary</div>
+        </div>
+        <div class="route-mid">
+          <div class="route-line">→</div>
+        </div>
+        <div>
+          <div class="iata">YVR</div>
+          <div class="city-label right" data-t="city-yvr">Vancouver</div>
+        </div>
+      </div>
+      <div class="flight-tags">
+        <span class="tag">📅 <span data-t="date-jul6">Mon, Jul 6</span></span>
+        <span class="tag">🛫 WestJet</span>
+        <span class="tag" data-t="dur-short">~1h 10m</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── HOTEL ── -->
+  <section id="hotel">
+    <div class="sec-title">🏨 <span data-t="sec-hotel">Hotel</span></div>
+
+    <div class="card">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:12px">
+        <div>
+          <div style="font-size:15px;font-weight:700">Everwild Canmore</div>
+          <div style="font-size:12px;color:var(--muted);margin-top:2px" data-t="everwild-sub">Boutique Hotel · Canmore, AB</div>
+        </div>
+        <span class="badge bg" data-t="badge-4n">4 Nights</span>
+      </div>
+      <div class="card-row">
+        <span class="card-label" data-t="lbl-checkin">Check-in</span>
+        <span class="card-value" data-t="date-jun29">Mon, Jun 29</span>
+      </div>
+      <div class="card-row">
+        <span class="card-label" data-t="lbl-checkout">Check-out</span>
+        <span class="card-value" data-t="date-jul3">Fri, Jul 3</span>
+      </div>
+      <div class="card-row">
+        <span class="card-label" data-t="lbl-guests">Guests</span>
+        <span class="card-value" data-t="guests-3">3 (JZ, YC, Hans)</span>
+      </div>
+      <div style="margin-top:12px">
+        <a href="https://www.google.com/maps/search/?api=1&query=Everwild+Canmore+Alberta" target="_blank">
+          <span class="tag">📍 <span data-t="open-maps">Open in Maps</span> ↗</span>
+        </a>
+      </div>
+    </div>
+
+    <div class="notice" id="hans-notice" data-t="hans-tbd">⚠️ Hans's accommodation Jul 3–6 is still TBD — will update when booked.</div>
+  </section>
+
+  <!-- ── CAR ── -->
+  <section id="car">
+    <div class="sec-title">🚗 <span data-t="sec-car">Car Rental</span></div>
+
+    <div class="card">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:12px">
+        <div>
+          <div style="font-size:15px;font-weight:700">Enterprise Rent-A-Car</div>
+          <div style="font-size:12px;color:var(--muted);margin-top:2px">
+            <a href="https://www.google.com/maps/search/?api=1&query=4804+Edmonton+Trail+NE+Calgary+AB" target="_blank">
+              📍 <span data-t="enterprise-loc">North Calgary · Edmonton Trail ↗</span>
+            </a>
+          </div>
+        </div>
+        <span class="badge bb" data-t="badge-suv">Intermediate SUV</span>
+      </div>
+      <div class="card-row">
+        <span class="card-label" data-t="lbl-vehicle">Vehicle</span>
+        <span class="card-value" data-t="car-vehicle">Ford Escape or similar</span>
+      </div>
+      <div class="card-row">
+        <span class="card-label" data-t="lbl-pickup">Pick-up</span>
+        <span class="card-value" data-t="car-pickup">Mon, Jun 29 · 2:00 PM</span>
+      </div>
+      <div class="card-row">
+        <span class="card-label" data-t="lbl-dropoff">Drop-off</span>
+        <span class="card-value" data-t="car-dropoff">Fri, Jul 3 · 2:00 PM</span>
+      </div>
+      <div class="card-row">
+        <span class="card-label" data-t="lbl-mileage">Mileage</span>
+        <span class="card-value" data-t="car-mileage">Unlimited</span>
+      </div>
+    </div>
+
+    <div class="card">
+      <div style="font-size:13px;font-weight:600;margin-bottom:10px" data-t="drive-title">🛣️ Drive Times from Calgary Airport</div>
+      <div class="drive-row"><span data-t="drive-canmore">→ Canmore (Everwild)</span><span>~1h 15m</span></div>
+      <div class="drive-row"><span data-t="drive-banff">→ Banff Townsite</span><span>~1h 30m</span></div>
+      <div class="drive-row"><span data-t="drive-moraine">→ Moraine Lake</span><span>~2h 00m</span></div>
+      <div class="drive-row"><span data-t="drive-louise">→ Lake Louise</span><span>~1h 50m</span></div>
+    </div>
+  </section>
+
+  <!-- ── ACTIVITIES ── -->
+  <section id="activities">
+    <div class="sec-title">🥾 <span data-t="sec-act">Activities</span></div>
+
+    <!-- Booked: Moraine Lake shuttle -->
+    <div class="card">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:12px">
+        <div>
+          <div style="font-size:15px;font-weight:700" data-t="moraine-title">Moraine Lake Shuttle</div>
+          <div style="font-size:12px;color:var(--muted);margin-top:2px" data-t="moraine-sub">Valley of the Ten Peaks</div>
+        </div>
+        <span class="badge bg" data-t="badge-booked">Booked ✓</span>
+      </div>
+      <div class="card-row">
+        <span class="card-label" data-t="lbl-date">Date</span>
+        <span class="card-value" data-t="date-jun30">Tue, Jun 30</span>
+      </div>
+      <div class="card-row">
+        <span class="card-label" data-t="lbl-departs">Departs</span>
+        <span class="card-value">1:30 PM</span>
+      </div>
+      <div class="card-row">
+        <span class="card-label" data-t="lbl-pax">Passengers</span>
+        <span class="card-value" data-t="pax-3">3 (JZ, YC, Hans)</span>
+      </div>
+      <div class="card-row">
+        <span class="card-label" data-t="lbl-return">Return</span>
+        <span class="card-value" data-t="return-incl">Included</span>
+      </div>
+      <div style="margin-top:12px">
+        <a href="https://www.google.com/maps/search/?api=1&query=Moraine+Lake+Alberta" target="_blank">
+          <span class="tag">📍 <span data-t="moraine-map-lbl">Moraine Lake</span> ↗</span>
+        </a>
+      </div>
+    </div>
+
+    <!-- Suggested activities -->
+    <div style="font-size:13px;font-weight:600;margin:16px 0 10px;color:var(--muted)" data-t="suggested-hd">💡 More to explore</div>
+    <div class="grid-2" id="act-grid"></div>
+  </section>
+
+  <!-- ── ITINERARY ── -->
+  <section id="itinerary">
+    <div class="sec-title">📅 <span data-t="sec-itin">Itinerary</span></div>
+    <div id="itin-container"></div>
+  </section>
+
+  <!-- ── MAP ── -->
+  <section id="map-sec">
+    <div class="sec-title">🗺️ <span data-t="sec-map">Map</span></div>
+    <div id="banff-map"></div>
+    <div style="font-size:11px;color:var(--dim);margin-top:8px;text-align:center" data-t="map-hint">Tap a pin to open in Google Maps</div>
+  </section>
+
+  <!-- ── WEATHER ── -->
+  <section id="weather">
+    <div class="sec-title">
+      🌤️ <span data-t="sec-wx">Weather</span>
+      <span style="font-size:11px;font-weight:400;color:var(--muted)" data-t="wx-sub">· Banff, AB</span>
+    </div>
+    <div id="wx-container"><div class="wx-notice" data-t="wx-loading">Loading forecast…</div></div>
+  </section>
+
+  <!-- ── EATS ── -->
+  <section id="eats">
+    <div class="sec-title">🍽️ <span data-t="sec-eats">Restaurant Picks</span></div>
+    <div class="grid-2" id="eats-grid"></div>
+  </section>
+
+</main>
+
+<footer>
+  <span data-t="footer">Hans & Family · Banff 2026 🏔️</span>
+</footer>
+
+<script>
+// ── TRANSLATIONS ─────────────────────────────────────────────────────────────
+const T = {
+  en: {
+    'nav-flights':'Flights','nav-hotel':'Hotel','nav-car':'Car','nav-act':'Activities',
+    'nav-itin':'Itinerary','nav-map':'Map','nav-wx':'Weather','nav-eats':'Eats',
+    'sec-flights':'Flights','sec-hotel':'Hotel','sec-car':'Car Rental','sec-act':'Activities',
+    'sec-itin':'Itinerary','sec-map':'Map','sec-wx':'Weather','sec-eats':'Restaurant Picks',
+    'badge-all3':'All 3 Travellers','badge-parents':'JZ & YC Return','badge-hans':'Hans Return',
+    'badge-4n':'4 Nights','badge-suv':'Intermediate SUV','badge-booked':'Booked ✓',
+    'city-yvr':'Vancouver','city-yyc':'Calgary',
+    'date-jun29':'Mon, Jun 29','date-jun30':'Tue, Jun 30','date-jul3':'Fri, Jul 3','date-jul6':'Mon, Jul 6',
+    'dur-short':'~1h 10m',
+    'everwild-sub':'Boutique Hotel · Canmore, AB',
+    'lbl-checkin':'Check-in','lbl-checkout':'Check-out','lbl-guests':'Guests',
+    'lbl-vehicle':'Vehicle','lbl-pickup':'Pick-up','lbl-dropoff':'Drop-off','lbl-mileage':'Mileage',
+    'lbl-date':'Date','lbl-departs':'Departs','lbl-pax':'Passengers','lbl-return':'Return',
+    'guests-3':'3 (JZ, YC, Hans)',
+    'open-maps':'Open in Maps',
+    'enterprise-loc':'North Calgary · Edmonton Trail ↗',
+    'car-vehicle':'Ford Escape or similar',
+    'car-pickup':'Mon, Jun 29 · 2:00 PM','car-dropoff':'Fri, Jul 3 · 2:00 PM','car-mileage':'Unlimited',
+    'drive-title':'🛣️ Drive Times from Calgary Airport',
+    'drive-canmore':'→ Canmore (Everwild)','drive-banff':'→ Banff Townsite',
+    'drive-moraine':'→ Moraine Lake','drive-louise':'→ Lake Louise',
+    'moraine-title':'Moraine Lake Shuttle','moraine-sub':'Valley of the Ten Peaks',
+    'pax-3':'3 (JZ, YC, Hans)','return-incl':'Included',
+    'moraine-map-lbl':'Moraine Lake',
+    'suggested-hd':'💡 More to explore',
+    'hans-tbd':'⚠️ Hans\'s accommodation Jul 3–6 is still TBD — will update when booked.',
+    'wx-loading':'Loading forecast…','wx-sub':'· Banff, AB',
+    'map-hint':'Tap a pin to open in Google Maps',
+    'footer':'Hans & Family · Banff 2026 🏔️',
+  },
+  zh: {
+    'nav-flights':'航班','nav-hotel':'酒店','nav-car':'租车','nav-act':'活动',
+    'nav-itin':'行程','nav-map':'地图','nav-wx':'天气','nav-eats':'美食',
+    'sec-flights':'航班','sec-hotel':'酒店','sec-car':'租车','sec-act':'活动',
+    'sec-itin':'每日行程','sec-map':'地图','sec-wx':'天气','sec-eats':'餐厅推荐',
+    'badge-all3':'三人同行','badge-parents':'爸妈返程','badge-hans':'Hans返程',
+    'badge-4n':'4晚','badge-suv':'中型SUV','badge-booked':'已预订 ✓',
+    'city-yvr':'温哥华','city-yyc':'卡尔加里',
+    'date-jun29':'6月29日（周一）','date-jun30':'6月30日（周二）',
+    'date-jul3':'7月3日（周五）','date-jul6':'7月6日（周一）',
+    'dur-short':'约1小时10分钟',
+    'everwild-sub':'精品酒店 · 艾伯塔省坎莫尔',
+    'lbl-checkin':'入住','lbl-checkout':'退房','lbl-guests':'住客',
+    'lbl-vehicle':'车型','lbl-pickup':'取车','lbl-dropoff':'还车','lbl-mileage':'里程',
+    'lbl-date':'日期','lbl-departs':'出发时间','lbl-pax':'乘客','lbl-return':'返程',
+    'guests-3':'3人（爸、妈、Hans）',
+    'open-maps':'在地图中打开',
+    'enterprise-loc':'卡尔加里北区 · 爱德蒙顿路 ↗',
+    'car-vehicle':'福特翼虎或同级',
+    'car-pickup':'6月29日（周一）下午2:00','car-dropoff':'7月3日（周五）下午2:00','car-mileage':'无限里程',
+    'drive-title':'🛣️ 从卡尔加里机场出发行车时间',
+    'drive-canmore':'→ 坎莫尔（野境酒店）','drive-banff':'→ 班夫小镇',
+    'drive-moraine':'→ 梦莲湖','drive-louise':'→ 路易斯湖',
+    'moraine-title':'梦莲湖接驳巴士','moraine-sub':'十峰谷',
+    'pax-3':'3人（爸、妈、Hans）','return-incl':'含返程',
+    'moraine-map-lbl':'梦莲湖',
+    'suggested-hd':'💡 更多探索',
+    'hans-tbd':'⚠️ Hans 7月3–6日的住宿待定，预订后将更新。',
+    'wx-loading':'加载天气预报中…','wx-sub':'· 班夫',
+    'map-hint':'点击图钉在谷歌地图中打开',
+    'footer':'Hans全家 · 班夫 2026 🏔️',
+  }
+};
+
+let lang = 'en';
+
+function applyLang() {
+  document.querySelectorAll('[data-t]').forEach(el => {
+    const k = el.dataset.t;
+    if (T[lang][k] !== undefined) el.textContent = T[lang][k];
+  });
+  document.getElementById('hero-title').textContent  = lang === 'en' ? '🏔️ Banff Family Trip'  : '🏔️ 班夫家庭之旅';
+  document.getElementById('hero-dates').textContent  = lang === 'en'
+    ? 'June 29 – July 6, 2026 · Canmore & Banff, Alberta'
+    : '2026年6月29日 – 7月6日 · 艾伯塔省';
+  document.getElementById('hero-pax').textContent    = lang === 'en' ? 'JZ · YC · Hans' : '爸 · 妈 · Hans';
+  document.title = lang === 'en' ? 'Banff Family Trip 🏔️' : '班夫家庭之旅 🏔️';
+  document.documentElement.lang = lang === 'en' ? 'en' : 'zh-CN';
+}
+
+function toggleLang() {
+  lang = lang === 'en' ? 'zh' : 'en';
+  document.getElementById('lang-btn').textContent = lang === 'en' ? '中文' : 'EN';
+  applyLang();
+  renderItinerary();
+  renderActivities();
+  renderEats();
+  fetchWeather();
+}
+
+// ── NAV ───────────────────────────────────────────────────────────────────────
+function goTo(id, btn) {
+  document.getElementById(id).scrollIntoView({ behavior: 'smooth' });
+  document.querySelectorAll('.pill').forEach(p => p.classList.remove('active'));
+  btn.classList.add('active');
+}
+
+const SECTIONS = ['flights','hotel','car','activities','itinerary','map-sec','weather','eats'];
+window.addEventListener('scroll', () => {
+  let cur = SECTIONS[0];
+  SECTIONS.forEach(id => {
+    const el = document.getElementById(id);
+    if (el && el.getBoundingClientRect().top < 100) cur = id;
+  });
+  document.querySelectorAll('.pill').forEach(p => {
+    p.classList.toggle('active', p.dataset.section === cur);
+  });
+}, { passive: true });
+
+// ── ITINERARY DATA ────────────────────────────────────────────────────────────
+const ITIN = {
+  en: [
+    { day:'Day 1', date:'Mon, Jun 29', special:null, events:[
+      { t:'Morning',  title:'Fly YVR → YYC', note:'WestJet WS110 · All 3 travellers' },
+      { t:'2:00 PM',  title:'Pick up rental car', note:'Enterprise · North Calgary Edmonton Trail · Ford Escape or similar' },
+      { t:'Afternoon',title:'Drive to Canmore', note:'~1h 15 min via Trans-Canada Hwy' },
+      { t:'Evening',  title:'Check in · Everwild Canmore', note:'Settle in & grab dinner in town' },
+    ]},
+    { day:'Day 2', date:'Tue, Jun 30', special:null, events:[
+      { t:'Morning',  title:'Explore Canmore', note:'Three Sisters hike or Quarry Lake walk' },
+      { t:'1:30 PM',  title:'🚌 Moraine Lake Shuttle departs', note:'3 passengers · return included · Valley of the Ten Peaks' },
+      { t:'Afternoon',title:'Moraine Lake', note:'Rockpile Trail, lakeshore, iconic views' },
+      { t:'Evening',  title:'Return to Canmore', note:'' },
+    ]},
+    { day:'Day 3', date:'Wed, Jul 1', special:'🇨🇦 Canada Day', events:[
+      { t:'Morning',  title:'Drive to Banff Townsite', note:'~20 min from Canmore' },
+      { t:'All Day',  title:'Banff townsite & Canada Day', note:'Cascade Gardens, Bow River walk, Banff Ave' },
+      { t:'Afternoon',title:'Optional: Banff Gondola', note:'Summit of Sulphur Mountain, panoramic views' },
+      { t:'Evening',  title:'Dinner in Banff', note:'' },
+    ]},
+    { day:'Day 4', date:'Thu, Jul 2', special:null, events:[
+      { t:'Morning',  title:'Lake Louise', note:'~50 min from Canmore · turquoise glacial lake' },
+      { t:'Afternoon',title:'Johnston Canyon', note:'Waterfall hike · Lower & Upper Falls, ~3 km trail' },
+      { t:'Evening',  title:'Last dinner together', note:'' },
+    ]},
+    { day:'Day 5', date:'Fri, Jul 3', special:'👋 Parents head home', events:[
+      { t:'Morning',  title:'Check out · Everwild Canmore', note:'' },
+      { t:'2:00 PM',  title:'Return rental car', note:'Enterprise · North Calgary Edmonton Trail' },
+      { t:'Afternoon',title:'JZ & YC fly YYC → YVR', note:'WestJet WS129' },
+      { t:'',         title:'Hans stays on in Banff / Calgary', note:'Accommodation TBD' },
+    ]},
+    { day:'Day 6', date:'Sat, Jul 4', special:null, events:[
+      { t:'All Day',  title:'Hans free day', note:'Icefields Parkway, Banff, or just relax' },
+    ]},
+    { day:'Day 7', date:'Sun, Jul 5', special:null, events:[
+      { t:'All Day',  title:'Hans free day', note:'' },
+    ]},
+    { day:'Day 8', date:'Mon, Jul 6', special:'🏠 Hans heads home', events:[
+      { t:'',         title:'Hans flies YYC → YVR', note:'WestJet WS179' },
+    ]},
+  ],
+  zh: [
+    { day:'第1天', date:'6月29日（周一）', special:null, events:[
+      { t:'上午',    title:'温哥华飞卡尔加里', note:'西捷航空 WS110 · 三人同行' },
+      { t:'下午2:00',title:'取租车', note:'企业租车 · 北卡尔加里爱德蒙顿路 · 福特翼虎或同级' },
+      { t:'下午',    title:'驾车前往坎莫尔', note:'经1号公路约1小时15分钟' },
+      { t:'傍晚',    title:'入住 野境酒店', note:'安顿后在小镇用晚餐' },
+    ]},
+    { day:'第2天', date:'6月30日（周二）', special:null, events:[
+      { t:'上午',    title:'探索坎莫尔', note:'三姐妹峰徒步或采石场湖漫步' },
+      { t:'下午1:30',title:'🚌 乘接驳巴士前往梦莲湖', note:'3人 · 含返程 · 十峰谷' },
+      { t:'下午',    title:'梦莲湖', note:'岩堆步道、湖畔漫步、绝美景色' },
+      { t:'傍晚',    title:'返回坎莫尔', note:'' },
+    ]},
+    { day:'第3天', date:'7月1日（周三）', special:'🇨🇦 加拿大国庆日', events:[
+      { t:'上午',    title:'驾车前往班夫小镇', note:'距坎莫尔约20分钟' },
+      { t:'全天',    title:'班夫小镇 & 国庆活动', note:'瀑布花园、弓河漫步、班夫大街' },
+      { t:'下午',    title:'可选：班夫缆车', note:'登磺磺山顶，俯瞰弓河谷全景' },
+      { t:'晚上',    title:'在班夫用晚餐', note:'' },
+    ]},
+    { day:'第4天', date:'7月2日（周四）', special:null, events:[
+      { t:'上午',    title:'路易斯湖', note:'距坎莫尔约50分钟 · 碧绿冰川湖' },
+      { t:'下午',    title:'约翰斯顿峡谷', note:'瀑布峡谷徒步 · 上下瀑布，约3公里' },
+      { t:'晚上',    title:'全家最后的晚餐', note:'' },
+    ]},
+    { day:'第5天', date:'7月3日（周五）', special:'👋 爸妈回家', events:[
+      { t:'上午',    title:'退房 · 野境酒店', note:'' },
+      { t:'下午2:00',title:'还车', note:'企业租车 · 北卡尔加里爱德蒙顿路' },
+      { t:'下午',    title:'爸妈飞卡尔加里→温哥华', note:'西捷航空 WS129' },
+      { t:'',        title:'Hans继续留在班夫/卡尔加里', note:'住宿待定' },
+    ]},
+    { day:'第6天', date:'7月4日（周六）', special:null, events:[
+      { t:'全天',    title:'Hans自由活动', note:'冰原大道、班夫探索或休闲放松' },
+    ]},
+    { day:'第7天', date:'7月5日（周日）', special:null, events:[
+      { t:'全天',    title:'Hans自由活动', note:'' },
+    ]},
+    { day:'第8天', date:'7月6日（周一）', special:'🏠 Hans回家', events:[
+      { t:'',        title:'Hans飞卡尔加里→温哥华', note:'西捷航空 WS179' },
+    ]},
+  ]
+};
+
+function renderItinerary() {
+  const c = document.getElementById('itin-container');
+  c.innerHTML = '';
+  ITIN[lang].forEach(d => {
+    const block = document.createElement('div');
+    block.className = 'day-block';
+    block.innerHTML = `
+      <div class="day-hd">
+        <div class="day-hd-left">
+          <span class="day-num">${d.day}</span>
+          <span class="day-date">${d.date}</span>
+          ${d.special ? `<span class="day-special">${d.special}</span>` : ''}
+        </div>
+      </div>
+      <div class="day-body">${d.events.map(ev => `
+        <div class="ev">
+          <div class="ev-time">${ev.t}</div>
+          <div><div class="ev-title">${ev.title}</div>${ev.note ? `<div class="ev-note">${ev.note}</div>` : ''}</div>
+        </div>`).join('')}
+      </div>`;
+    c.appendChild(block);
+  });
+}
+
+// ── ACTIVITIES ────────────────────────────────────────────────────────────────
+const ACTS = {
+  en: [
+    { name:'Banff Gondola',      type:'Scenic',      desc:'Ride to Sulphur Mountain summit',       q:'Banff+Gondola+Alberta' },
+    { name:'Lake Louise',        type:'Nature',       desc:'Iconic turquoise glacial lake',         q:'Lake+Louise+Alberta' },
+    { name:'Johnston Canyon',    type:'Hiking',       desc:'Lower & Upper waterfalls trail',        q:'Johnston+Canyon+Banff' },
+    { name:'Icefields Parkway',  type:'Road Trip',    desc:"One of the world's most scenic drives", q:'Icefields+Parkway+Alberta' },
+    { name:'Vermilion Lakes',    type:'Scenic',       desc:'Stunning wetlands at sunset',           q:'Vermilion+Lakes+Banff' },
+    { name:'Bow Falls',          type:'Nature',       desc:'Easy walk from Banff townsite',         q:'Bow+Falls+Banff' },
+  ],
+  zh: [
+    { name:'班夫缆车',       type:'观光',  desc:'登磺磺山顶，俯瞰弓河谷全景',   q:'Banff+Gondola+Alberta' },
+    { name:'路易斯湖',       type:'自然',  desc:'标志性碧绿冰川湖',             q:'Lake+Louise+Alberta' },
+    { name:'约翰斯顿峡谷',   type:'徒步',  desc:'上下瀑布步道',                q:'Johnston+Canyon+Banff' },
+    { name:'冰原大道',       type:'自驾',  desc:'全球最美公路之一',             q:'Icefields+Parkway+Alberta' },
+    { name:'朱砂湖',         type:'观光',  desc:'绝美湿地，日落必去',           q:'Vermilion+Lakes+Banff' },
+    { name:'弓河瀑布',       type:'自然',  desc:'从班夫小镇步行可达',           q:'Bow+Falls+Banff' },
+  ]
+};
+
+function renderActivities() {
+  const g = document.getElementById('act-grid');
+  g.innerHTML = '';
+  ACTS[lang].forEach(a => {
+    const el = document.createElement('div');
+    el.className = 'gc';
+    el.innerHTML = `
+      <div class="gc-name"><a href="https://www.google.com/maps/search/?api=1&query=${a.q}" target="_blank">${a.name} ↗</a></div>
+      <div class="gc-type">${a.type}</div>
+      <div class="gc-desc">${a.desc}</div>`;
+    g.appendChild(el);
+  });
+}
+
+// ── RESTAURANTS ───────────────────────────────────────────────────────────────
+const EATS = {
+  en: [
+    { name:"The Bison Restaurant", area:'Banff',    type:'Upscale Comfort', desc:'Rocky Mountain cuisine, local ingredients',        q:'The+Bison+Restaurant+Banff' },
+    { name:'Grizzly House',        area:'Banff',    type:'Fondue & Grill',  desc:'Classic Banff institution since 1967',              q:'Grizzly+House+Banff' },
+    { name:'Crazyweed Kitchen',    area:'Canmore',  type:'Eclectic',        desc:'Globally-inspired, local favourite',                q:'Crazyweed+Kitchen+Canmore' },
+    { name:'The Wood',             area:'Canmore',  type:'Wood-Fired Pizza',desc:'Cozy spot, great pizza & cocktails',                q:'The+Wood+Restaurant+Canmore' },
+    { name:"Tooloulou's",          area:'Banff',    type:'Cajun',           desc:'Lively & fun, great for groups',                   q:'Tooloulou+Banff' },
+    { name:'Block Kitchen + Bar',  area:'Banff',    type:'Modern Canadian', desc:'Chic vibes, small plates & cocktails',              q:'Block+Kitchen+Bar+Banff' },
+  ],
+  zh: [
+    { name:'野牛餐厅',     area:'班夫',   type:'精致便餐',  desc:'落基山本地食材，分量十足',  q:'The+Bison+Restaurant+Banff' },
+    { name:'灰熊之家',     area:'班夫',   type:'奶酪火锅',  desc:'1967年开业，班夫经典老店', q:'Grizzly+House+Banff' },
+    { name:'疯草厨房',     area:'坎莫尔', type:'创意料理',  desc:'融合全球风味，本地人最爱', q:'Crazyweed+Kitchen+Canmore' },
+    { name:'木柴餐厅',     area:'坎莫尔', type:'窑烤披萨',  desc:'氛围温馨，披萨和鸡尾酒一流', q:'The+Wood+Restaurant+Canmore' },
+    { name:"Tooloulou's", area:'班夫',   type:'卡津料理',  desc:'热闹气氛，适合全家聚餐',   q:'Tooloulou+Banff' },
+    { name:'Block厨房酒吧', area:'班夫',  type:'现代加拿大菜', desc:'时髦风格，小食和鸡尾酒出色', q:'Block+Kitchen+Bar+Banff' },
+  ]
+};
+
+function renderEats() {
+  const g = document.getElementById('eats-grid');
+  g.innerHTML = '';
+  EATS[lang].forEach(r => {
+    const el = document.createElement('div');
+    el.className = 'gc';
+    el.innerHTML = `
+      <div class="gc-name"><a href="https://www.google.com/maps/search/?api=1&query=${r.q}" target="_blank">${r.name} ↗</a></div>
+      <div class="gc-type">${r.area} · ${r.type}</div>
+      <div class="gc-desc">${r.desc}</div>`;
+    g.appendChild(el);
+  });
+}
+
+// ── MAP ───────────────────────────────────────────────────────────────────────
+function initMap() {
+  const map = L.map('banff-map').setView([51.22, -115.55], 9);
+  L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+    attribution: '© OpenStreetMap © CARTO', maxZoom: 19
+  }).addTo(map);
+
+  function dot(color, glow) {
+    return L.divIcon({
+      className:'',
+      html:`<div style="width:11px;height:11px;background:${color};border-radius:50%;border:2.5px solid #fff;box-shadow:0 0 8px ${glow}"></div>`,
+      iconSize:[11,11], iconAnchor:[5,5]
+    });
+  }
+  const green = dot('#4ade80','rgba(74,222,128,.6)');
+  const blue  = dot('#60a5fa','rgba(96,165,250,.6)');
+  const yellow = dot('#fbbf24','rgba(251,191,36,.6)');
+
+  const pins = [
+    { lat:51.1315, lng:-114.0106, label:'✈️ Calgary Airport (YYC)',          icon:blue,   q:'Calgary+International+Airport' },
+    { lat:51.0890, lng:-115.3486, label:'🏨 Everwild Canmore',               icon:green,  q:'Everwild+Canmore+Alberta' },
+    { lat:51.1784, lng:-115.5708, label:'🏔️ Banff Townsite',                icon:green,  q:'Banff+Townsite+Alberta' },
+    { lat:51.3217, lng:-116.1860, label:'🚌 Moraine Lake',                   icon:yellow, q:'Moraine+Lake+Alberta' },
+    { lat:51.4254, lng:-116.1773, label:'💙 Lake Louise',                    icon:blue,   q:'Lake+Louise+Alberta' },
+  ];
+
+  pins.forEach(p => {
+    L.marker([p.lat, p.lng], { icon: p.icon })
+      .addTo(map)
+      .bindPopup(
+        `<div style="font-size:12px;font-weight:600;line-height:1.6">${p.label}<br>
+         <a href="https://www.google.com/maps/search/?api=1&query=${p.q}" target="_blank"
+            style="color:#4ade80;font-weight:400;font-size:11px">${lang === 'zh' ? '在谷歌地图打开 ↗' : 'Open in Google Maps ↗'}</a></div>`,
+        { className: 'dp' }
+      );
+  });
+}
+
+const _s = document.createElement('style');
+_s.textContent = `.dp .leaflet-popup-content-wrapper{background:#1a1a1a;border:1px solid #2a2a2a;color:#e8e8e8;border-radius:8px;box-shadow:0 4px 16px rgba(0,0,0,.6);padding:2px}.dp .leaflet-popup-tip{background:#1a1a1a}.dp .leaflet-popup-content{margin:8px 12px}`;
+document.head.appendChild(_s);
+
+// ── WEATHER ───────────────────────────────────────────────────────────────────
+const WMO = {0:'☀️',1:'🌤️',2:'⛅',3:'☁️',45:'🌫️',48:'🌫️',51:'🌦️',53:'🌦️',55:'🌧️',
+              61:'🌧️',63:'🌧️',65:'🌧️',71:'❄️',73:'❄️',75:'❄️',80:'🌦️',81:'🌧️',82:'⛈️',95:'⛈️'};
+
+async function fetchWeather() {
+  const tripStart = new Date('2026-06-29');
+  const tripEnd   = new Date('2026-07-06');
+  const container = document.getElementById('wx-container');
+
+  try {
+    const url = 'https://api.open-meteo.com/v1/forecast?latitude=51.1784&longitude=-115.5708' +
+                '&daily=temperature_2m_max,temperature_2m_min,weathercode' +
+                '&timezone=America%2FDenver&forecast_days=16';
+    const data = await (await fetch(url)).json();
+    const days = data.daily.time;
+
+    const indices = days.reduce((acc, d, i) => {
+      const dt = new Date(d + 'T00:00:00');
+      if (dt >= tripStart && dt <= tripEnd) acc.push(i);
+      return acc;
+    }, []);
+
+    if (!indices.length) {
+      const daysAway = Math.ceil((tripStart - new Date()) / 86400000);
+      const msg = lang === 'en'
+        ? `Forecast not yet available — check back in ~${daysAway} days (closer to departure).`
+        : `暂无天气预报 — 出发前约${daysAway}天可查看。`;
+      container.innerHTML = `<div class="wx-notice">${msg}</div>`;
+      return;
+    }
+
+    const months_en = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+    const months_zh = ['1月','2月','3月','4月','5月','6月','7月','8月','9月','10月','11月','12月'];
+
+    container.innerHTML = '<div class="wx-scroll" id="wx-scroll"></div>';
+    const grid = document.getElementById('wx-scroll');
+
+    indices.forEach(i => {
+      const dt  = new Date(days[i] + 'T00:00:00');
+      const hi  = Math.round(data.daily.temperature_2m_max[i]);
+      const lo  = Math.round(data.daily.temperature_2m_min[i]);
+      const ico = WMO[data.daily.weathercode[i]] || '🌤️';
+      const dateLabel = lang === 'en'
+        ? `${months_en[dt.getMonth()]} ${dt.getDate()}`
+        : `${months_zh[dt.getMonth()]}${dt.getDate()}日`;
+      const cell = document.createElement('div');
+      cell.className = 'wx-cell';
+      cell.innerHTML = `<div class="wx-date">${dateLabel}</div><div class="wx-icon">${ico}</div><div class="wx-hi">${hi}°C</div><div class="wx-lo">${lo}°C</div>`;
+      grid.appendChild(cell);
+    });
+  } catch {
+    container.innerHTML = `<div class="wx-notice">${lang === 'en' ? 'Weather unavailable.' : '天气加载失败。'}</div>`;
+  }
+}
+
+// ── INIT ──────────────────────────────────────────────────────────────────────
+applyLang();
+renderItinerary();
+renderActivities();
+renderEats();
+initMap();
+fetchWeather();
+</script>
 </body>
 </html>
