@@ -1,0 +1,12 @@
+[[redirects]]
+  from = "/"
+  to = "/banff/index.html"
+  status = 200
+
+[[redirects]]
+  from = "/banff"
+  to = "/banff/index.html"
+  status = 200
+
+[build]
+  publish = "."
