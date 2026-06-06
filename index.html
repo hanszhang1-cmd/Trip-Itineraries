@@ -93,7 +93,12 @@
       <div class="dot" id="d2"></div>
       <div class="dot" id="d3"></div>
     </div>
-    <div class="keypad">
+    <input id="pin-input" type="tel" inputmode="numeric" maxlength="4"
+           autocomplete="one-time-code"
+           style="position:absolute;opacity:0;width:1px;height:1px;pointer-events:none"
+           oninput="onInput(this)">
+
+    <div class="keypad" onclick="document.getElementById('pin-input').focus()">
       <button class="key" onclick="press('1')">1</button>
       <button class="key" onclick="press('2')">2</button>
       <button class="key" onclick="press('3')">3</button>
@@ -184,12 +189,36 @@
       }
     }
 
-    // Keyboard support
-    document.addEventListener('keydown', e => {
-      if (document.getElementById('pin-screen').style.display === 'none') return;
-      if (/^[0-9]$/.test(e.key)) press(e.key);
-      if (e.key === 'Backspace') del();
-    });
+    // Auto-focus hidden input so typing works immediately
+    const pinInput = document.getElementById('pin-input');
+    if (document.getElementById('pin-screen').style.display !== 'none') {
+      pinInput.focus();
+    }
+    // Re-focus if user clicks anywhere on the PIN screen
+    document.getElementById('pin-screen').addEventListener('click', () => pinInput.focus());
+
+    function onInput(el) {
+      // Sync hidden input → entry state
+      const val = el.value.replace(/\D/g, '').slice(0, 4);
+      el.value = val;
+      entry = val;
+      updateDots();
+      if (entry.length === 4) {
+        el.value = '';
+        if (entry === PIN) {
+          unlock();
+        } else {
+          const dots = document.getElementById('dots');
+          dots.querySelectorAll('.dot').forEach(d => d.classList.add('error'));
+          dots.classList.add('shake');
+          setTimeout(() => {
+            dots.querySelectorAll('.dot').forEach(d => d.classList.remove('filled','error'));
+            dots.classList.remove('shake');
+            entry = '';
+          }, 600);
+        }
+      }
+    }
   </script>
 </body>
 </html>
