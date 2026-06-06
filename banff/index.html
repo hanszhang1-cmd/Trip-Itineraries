@@ -203,7 +203,8 @@
       <div class="flight-tags">
         <span class="tag">📅 <span data-t="date-jun29">Mon, Jun 29</span></span>
         <span class="tag">🛫 WestJet</span>
-        <span class="tag" data-t="dur-short">~1h 5m</span>
+        <span class="tag">~1h 5m</span>
+        <a href="https://www.westjet.com/en-ca/manage-trips" target="_blank"><span class="tag" data-t="ws-link">WestJet ↗</span></a>
       </div>
     </div>
 
@@ -229,7 +230,8 @@
       <div class="flight-tags">
         <span class="tag">📅 <span data-t="date-jul3">Fri, Jul 3</span></span>
         <span class="tag">🛫 WestJet</span>
-        <span class="tag" data-t="dur-short">~1h 10m</span>
+        <span class="tag">~1h 10m</span>
+        <a href="https://www.westjet.com/en-ca/manage-trips" target="_blank"><span class="tag" data-t="ws-link">WestJet ↗</span></a>
       </div>
     </div>
 
@@ -255,7 +257,8 @@
       <div class="flight-tags">
         <span class="tag">📅 <span data-t="date-jul6">Mon, Jul 6</span></span>
         <span class="tag">🛫 WestJet</span>
-        <span class="tag" data-t="dur-short">~1h 10m</span>
+        <span class="tag">~1h 10m</span>
+        <a href="https://www.westjet.com/en-ca/manage-trips" target="_blank"><span class="tag" data-t="ws-link">WestJet ↗</span></a>
       </div>
     </div>
   </section>
@@ -267,7 +270,9 @@
     <div class="card">
       <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:12px">
         <div>
-          <div style="font-size:15px;font-weight:700">Everwild Canmore</div>
+          <div style="font-size:15px;font-weight:700">
+            <a href="https://www.google.com/maps/search/?api=1&query=Everwild+Canmore+Alberta" target="_blank" style="color:var(--text)">Everwild Canmore ↗</a>
+          </div>
           <div style="font-size:12px;color:var(--muted);margin-top:2px" data-t="everwild-sub">Boutique Hotel · Canmore, AB</div>
         </div>
         <span class="badge bg" data-t="badge-4n">4 Nights</span>
@@ -284,10 +289,9 @@
         <span class="card-label" data-t="lbl-guests">Guests</span>
         <span class="card-value" data-t="guests-3">3 (JZ, YC, Hans)</span>
       </div>
-      <div style="margin-top:12px">
-        <a href="https://www.google.com/maps/search/?api=1&query=Everwild+Canmore+Alberta" target="_blank">
-          <span class="tag">📍 <span data-t="open-maps">Open in Maps</span> ↗</span>
-        </a>
+      <div style="margin-top:12px;display:flex;gap:6px;flex-wrap:wrap">
+        <a href="https://www.everwildcanmore.com" target="_blank"><span class="tag">🌐 Hotel Website ↗</span></a>
+        <a href="https://www.google.com/maps/search/?api=1&query=Everwild+Canmore+Alberta" target="_blank"><span class="tag">📍 <span data-t="open-maps">Maps</span> ↗</span></a>
       </div>
     </div>
 
@@ -425,6 +429,8 @@ const T = {
     'city-yvr':'Vancouver','city-yyc':'Calgary',
     'date-jun29':'Mon, Jun 29','date-jun30':'Tue, Jun 30','date-jul3':'Fri, Jul 3','date-jul6':'Mon, Jul 6',
     'dur-short':'~1h 10m',
+    'lbl-ref':'Booking Ref',
+    'ws-link':'WestJet ↗',
     'everwild-sub':'Boutique Hotel · Canmore, AB',
     'lbl-checkin':'Check-in','lbl-checkout':'Check-out','lbl-guests':'Guests',
     'lbl-vehicle':'Vehicle','lbl-pickup':'Pick-up','lbl-dropoff':'Drop-off','lbl-mileage':'Mileage',
@@ -457,6 +463,8 @@ const T = {
     'date-jun29':'6月29日（周一）','date-jun30':'6月30日（周二）',
     'date-jul3':'7月3日（周五）','date-jul6':'7月6日（周一）',
     'dur-short':'约1小时10分钟',
+    'lbl-ref':'订单编号',
+    'ws-link':'西捷航空官网 ↗',
     'everwild-sub':'精品酒店 · 艾伯塔省坎莫尔',
     'lbl-checkin':'入住','lbl-checkout':'退房','lbl-guests':'住客',
     'lbl-vehicle':'车型','lbl-pickup':'取车','lbl-dropoff':'还车','lbl-mileage':'里程',
@@ -704,20 +712,20 @@ function renderEats() {
 // ── MAP ───────────────────────────────────────────────────────────────────────
 function initMap() {
   const map = L.map('banff-map').setView([51.22, -115.55], 9);
-  L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+  L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
     attribution: '© OpenStreetMap © CARTO', maxZoom: 19
   }).addTo(map);
 
-  function dot(color, glow) {
+  function dot(color, border) {
     return L.divIcon({
       className:'',
-      html:`<div style="width:11px;height:11px;background:${color};border-radius:50%;border:2.5px solid #fff;box-shadow:0 0 8px ${glow}"></div>`,
-      iconSize:[11,11], iconAnchor:[5,5]
+      html:`<div style="width:13px;height:13px;background:${color};border-radius:50%;border:2.5px solid ${border};box-shadow:0 1px 4px rgba(0,0,0,.4)"></div>`,
+      iconSize:[13,13], iconAnchor:[6,6]
     });
   }
-  const green = dot('#4ade80','rgba(74,222,128,.6)');
-  const blue  = dot('#60a5fa','rgba(96,165,250,.6)');
-  const yellow = dot('#fbbf24','rgba(251,191,36,.6)');
+  const green  = dot('#16a34a','#fff');
+  const blue   = dot('#1d4ed8','#fff');
+  const yellow = dot('#d97706','#fff');
 
   const pins = [
     { lat:51.1315, lng:-114.0106, label:'✈️ Calgary Airport (YYC)',          icon:blue,   q:'Calgary+International+Airport' },
@@ -731,16 +739,16 @@ function initMap() {
     L.marker([p.lat, p.lng], { icon: p.icon })
       .addTo(map)
       .bindPopup(
-        `<div style="font-size:12px;font-weight:600;line-height:1.6">${p.label}<br>
+        `<div style="font-size:12px;font-weight:600;color:#111;line-height:1.6">${p.label}<br>
          <a href="https://www.google.com/maps/search/?api=1&query=${p.q}" target="_blank"
-            style="color:#4ade80;font-weight:400;font-size:11px">${lang === 'zh' ? '在谷歌地图打开 ↗' : 'Open in Google Maps ↗'}</a></div>`,
+            style="color:#1a73e8;font-weight:400;font-size:11px">${lang === 'zh' ? '在谷歌地图打开 ↗' : 'Open in Google Maps ↗'}</a></div>`,
         { className: 'dp' }
       );
   });
 }
 
 const _s = document.createElement('style');
-_s.textContent = `.dp .leaflet-popup-content-wrapper{background:#1a1a1a;border:1px solid #2a2a2a;color:#e8e8e8;border-radius:8px;box-shadow:0 4px 16px rgba(0,0,0,.6);padding:2px}.dp .leaflet-popup-tip{background:#1a1a1a}.dp .leaflet-popup-content{margin:8px 12px}`;
+_s.textContent = `.dp .leaflet-popup-content-wrapper{background:#fff;border:1px solid #ddd;color:#111;border-radius:8px;box-shadow:0 4px 16px rgba(0,0,0,.18);padding:2px}.dp .leaflet-popup-tip{background:#fff}.dp .leaflet-popup-content{margin:8px 12px}`;
 document.head.appendChild(_s);
 
 // ── WEATHER ───────────────────────────────────────────────────────────────────
