@@ -1,0 +1,653 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Tomorrowland 2026 🎶</title>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <style>
+    :root {
+      --bg: #0a0a0a;
+      --surface: #141414;
+      --surface2: #1c1c1c;
+      --border: #252525;
+      --text: #e8e8e8;
+      --muted: #888;
+      --dim: #444;
+      --accent: #f59e0b;
+      --accent-dim: rgba(245,158,11,.15);
+      --blue: #60a5fa;
+      --green: #4ade80;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: -apple-system, 'Helvetica Neue', sans-serif; background: var(--bg); color: var(--text); }
+
+    /* ── HERO ── */
+    .hero {
+      background: linear-gradient(160deg, #0a0a0a 0%, #1a1000 40%, #2a1800 100%);
+      padding: 52px 20px 36px;
+      text-align: center;
+      border-bottom: 1px solid var(--border);
+      position: relative;
+      overflow: hidden;
+    }
+    .hero::before {
+      content: '';
+      position: absolute; inset: 0;
+      background: radial-gradient(ellipse at 50% 0%, rgba(245,158,11,.12) 0%, transparent 70%);
+      pointer-events: none;
+    }
+    .hero-eye { font-size: 36px; margin-bottom: 10px; }
+    .hero h1 { font-size: 28px; font-weight: 800; letter-spacing: -.5px; margin-bottom: 6px; }
+    .hero h1 span { color: var(--accent); }
+    .hero .sub { color: var(--muted); font-size: 13px; margin-bottom: 4px; }
+    .hero .loc { font-size: 12px; color: var(--dim); letter-spacing: 1px; text-transform: uppercase; }
+
+    /* ── NAV ── */
+    .nav-bar {
+      position: sticky; top: 0; z-index: 100;
+      background: rgba(10,10,10,.96); backdrop-filter: blur(8px);
+      border-bottom: 1px solid var(--border);
+      overflow-x: auto; scrollbar-width: none;
+    }
+    .nav-bar::-webkit-scrollbar { display: none; }
+    .nav-inner { display: flex; gap: 2px; padding: 8px 12px; white-space: nowrap; min-width: max-content; }
+    .pill {
+      background: none; border: none; color: var(--muted);
+      padding: 6px 12px; border-radius: 16px; cursor: pointer;
+      font-size: 12px; font-weight: 500; transition: all .15s; white-space: nowrap;
+    }
+    .pill:hover { color: var(--text); background: var(--surface2); }
+    .pill.active { background: rgba(245,158,11,.15); color: var(--accent); font-weight: 600; }
+
+    /* ── LAYOUT ── */
+    main { max-width: 720px; margin: 0 auto; padding: 22px 14px 70px; }
+    section { margin-bottom: 48px; scroll-margin-top: 60px; }
+    .sec-title { font-size: 16px; font-weight: 700; margin-bottom: 14px; display: flex; align-items: center; gap: 8px; }
+
+    /* ── CARDS ── */
+    .card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 14px 16px; margin-bottom: 10px; }
+    .card-row { display: flex; justify-content: space-between; align-items: center; font-size: 13px; padding: 7px 0; border-bottom: 1px solid var(--border); }
+    .card-row:last-child { border-bottom: none; }
+    .card-label { color: var(--muted); }
+    .card-value { font-weight: 500; text-align: right; }
+
+    /* ── BADGES ── */
+    .badge { display: inline-block; font-size: 11px; padding: 2px 8px; border-radius: 8px; font-weight: 600; }
+    .ba { background: var(--accent-dim); color: var(--accent); }
+    .bb { background: rgba(96,165,250,.15); color: var(--blue); }
+    .bg { background: rgba(74,222,128,.15); color: var(--green); }
+    .bp { background: rgba(192,132,252,.15); color: #c084fc; }
+
+    /* ── FLIGHT CARD ── */
+    .flight-card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 14px 16px; margin-bottom: 10px; }
+    .flight-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
+    .flight-route { display: flex; align-items: center; gap: 8px; margin-bottom: 10px; }
+    .iata { font-size: 26px; font-weight: 800; letter-spacing: 1px; }
+    .route-mid { flex: 1; text-align: center; }
+    .route-line { display: flex; align-items: center; color: var(--dim); font-size: 12px; }
+    .route-line::before, .route-line::after { content: ''; flex: 1; height: 1px; background: var(--border); margin: 0 4px; }
+    .city-label { font-size: 11px; color: var(--muted); margin-top: 2px; }
+    .city-label.right { text-align: right; }
+    .flight-tags { display: flex; flex-wrap: wrap; gap: 6px; }
+    .tag { font-size: 11px; color: var(--muted); background: var(--surface2); padding: 3px 8px; border-radius: 6px; }
+
+    /* ── FESTIVAL SCHEDULE ── */
+    .fest-day { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; margin-bottom: 10px; overflow: hidden; }
+    .fest-day-hd { background: var(--surface2); padding: 10px 14px; display: flex; justify-content: space-between; align-items: center; }
+    .fest-day-title { font-weight: 700; font-size: 13px; }
+    .fest-day-label { font-size: 11px; color: var(--accent); font-weight: 600; }
+    .fest-day-body { padding: 12px 14px; }
+    .fest-ev { display: flex; gap: 12px; padding: 6px 0; border-bottom: 1px solid var(--border); }
+    .fest-ev:last-child { border-bottom: none; }
+    .fest-time { font-size: 11px; color: var(--accent); min-width: 52px; padding-top: 2px; font-weight: 600; flex-shrink: 0; }
+    .fest-title { font-size: 13px; }
+    .fest-note { font-size: 11px; color: var(--muted); margin-top: 2px; }
+
+    /* ── ITINERARY ── */
+    .day-block { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; margin-bottom: 10px; overflow: hidden; }
+    .day-hd { background: var(--surface2); padding: 10px 14px; display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+    .day-num { font-weight: 700; font-size: 13px; }
+    .day-date { font-size: 12px; color: var(--muted); }
+    .day-special { font-size: 11px; color: var(--accent); }
+    .day-body { padding: 12px 14px; }
+    .ev { display: flex; gap: 12px; padding: 5px 0; }
+    .ev-time { font-size: 11px; color: var(--accent); min-width: 52px; padding-top: 2px; font-weight: 600; flex-shrink: 0; }
+    .ev-title { font-size: 13px; }
+    .ev-note { font-size: 11px; color: var(--muted); margin-top: 2px; line-height: 1.4; }
+
+    /* ── MAP ── */
+    #tml-map { height: 300px; border-radius: 12px; border: 1px solid var(--border); }
+
+    /* ── WEATHER ── */
+    .wx-wrap { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    @media (max-width: 440px) { .wx-wrap { grid-template-columns: 1fr; } }
+    .wx-panel { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 12px 14px; }
+    .wx-panel-title { font-size: 12px; font-weight: 600; color: var(--muted); margin-bottom: 10px; }
+    .wx-scroll { display: flex; gap: 7px; overflow-x: auto; scrollbar-width: none; }
+    .wx-scroll::-webkit-scrollbar { display: none; }
+    .wx-cell { flex: 0 0 62px; background: var(--surface2); border: 1px solid var(--border); border-radius: 8px; padding: 8px 4px; text-align: center; }
+    .wx-date { font-size: 10px; color: var(--muted); }
+    .wx-icon { font-size: 18px; margin: 3px 0; }
+    .wx-hi { font-size: 12px; font-weight: 700; }
+    .wx-lo { font-size: 10px; color: var(--muted); }
+    .wx-notice { font-size: 12px; color: var(--muted); padding: 8px 0; }
+
+    /* ── NOTICE ── */
+    .notice { background: rgba(251,191,36,.07); border: 1px solid rgba(251,191,36,.2); border-radius: 10px; padding: 10px 14px; font-size: 12px; color: #fbbf24; margin-bottom: 10px; }
+
+    /* ── DRIVE ROWS ── */
+    .drive-row { display: flex; justify-content: space-between; padding: 5px 0; border-bottom: 1px solid var(--border); font-size: 12px; color: var(--muted); }
+    .drive-row:last-child { border-bottom: none; }
+
+    a { color: inherit; text-decoration: none; }
+    a:hover { color: var(--accent); }
+    footer { text-align: center; color: var(--dim); font-size: 12px; padding: 20px; border-top: 1px solid var(--border); }
+  </style>
+</head>
+<body>
+
+<!-- HERO -->
+<div class="hero">
+  <div class="hero-eye">🎶</div>
+  <h1>Tomorrow<span>land</span> 2026</h1>
+  <div class="sub">Jul 15 – 23 · Belgium · Mallorca · New York</div>
+  <div class="loc">Weekend One · Belgian Journey</div>
+</div>
+
+<!-- NAV -->
+<nav class="nav-bar">
+  <div class="nav-inner">
+    <button class="pill active" data-section="flights" onclick="goTo('flights',this)">✈️ Flights</button>
+    <button class="pill" data-section="hotels" onclick="goTo('hotels',this)">🏨 Hotels</button>
+    <button class="pill" data-section="festival" onclick="goTo('festival',this)">🎪 Festival</button>
+    <button class="pill" data-section="itinerary" onclick="goTo('itinerary',this)">📅 Itinerary</button>
+    <button class="pill" data-section="map-sec" onclick="goTo('map-sec',this)">🗺️ Map</button>
+    <button class="pill" data-section="weather" onclick="goTo('weather',this)">🌤️ Weather</button>
+  </div>
+</nav>
+
+<main>
+
+  <!-- ── FLIGHTS ── -->
+  <section id="flights">
+    <div class="sec-title">✈️ Flights & Transport</div>
+
+    <!-- JFK → CDG -->
+    <div class="flight-card">
+      <div class="flight-header">
+        <span class="badge bb">American · AA 42</span>
+        <span class="badge bp">Premium Economy · UYOHDB</span>
+      </div>
+      <div class="flight-route">
+        <div>
+          <div class="iata">JFK</div>
+          <div class="city-label">New York</div>
+        </div>
+        <div class="route-mid"><div class="route-line">✈️</div></div>
+        <div>
+          <div class="iata">CDG</div>
+          <div class="city-label right">Paris</div>
+        </div>
+      </div>
+      <div class="flight-tags">
+        <span class="tag">📅 Wed, Jul 15</span>
+        <span class="tag">🛫 5:45 PM → 7:20 AM (+1)</span>
+        <span class="tag">6h 35m · Nonstop</span>
+        <span class="tag">Boeing 777</span>
+        <span class="tag">🍽️ Dinner + Breakfast</span>
+        <a href="https://www.aa.com/reservation/view/find-your-reservation" target="_blank"><span class="tag">AA.com ↗</span></a>
+      </div>
+    </div>
+
+    <!-- Paris → Brussels Eurostar -->
+    <div class="flight-card">
+      <div class="flight-header">
+        <span class="badge bb">Eurostar · Standard</span>
+        <span class="badge ba">Ref GFFCYM · Coach 5 Seat 62</span>
+      </div>
+      <div class="flight-route">
+        <div>
+          <div class="iata" style="font-size:18px">Paris</div>
+          <div class="city-label">Gare du Nord</div>
+        </div>
+        <div class="route-mid"><div class="route-line">🚄</div></div>
+        <div>
+          <div class="iata" style="font-size:18px">Brussels</div>
+          <div class="city-label right">Midi / Zuid</div>
+        </div>
+      </div>
+      <div class="flight-tags">
+        <span class="tag">📅 Thu, Jul 16</span>
+        <span class="tag">🚄 14:22 → 15:44</span>
+        <span class="tag">1h 22m · Direct</span>
+        <a href="https://www.eurostar.com/uk-en/manage-booking" target="_blank"><span class="tag">Eurostar ↗</span></a>
+      </div>
+    </div>
+
+    <!-- Brussels CRL → PMI -->
+    <div class="flight-card">
+      <div class="flight-header">
+        <span class="badge bb">Ryanair · FR 7837</span>
+        <span class="badge ba">Res U6HQ3H · Seat 14D</span>
+      </div>
+      <div class="flight-route">
+        <div>
+          <div class="iata">CRL</div>
+          <div class="city-label">Brussels</div>
+        </div>
+        <div class="route-mid"><div class="route-line">✈️</div></div>
+        <div>
+          <div class="iata">PMI</div>
+          <div class="city-label right">Palma</div>
+        </div>
+      </div>
+      <div class="flight-tags">
+        <span class="tag">📅 Mon, Jul 20</span>
+        <span class="tag">🛫 15:10 → 17:20</span>
+        <span class="tag">2h 10m · Nonstop</span>
+        <a href="https://www.ryanair.com/gb/en/manage-your-booking" target="_blank"><span class="tag">Ryanair ↗</span></a>
+      </div>
+    </div>
+
+    <!-- PMI → MAD -->
+    <div class="flight-card">
+      <div class="flight-header">
+        <span class="badge bb">Air Europa · UX 6030</span>
+        <span class="badge ba">Ref B8N6FT · Seat 6F</span>
+      </div>
+      <div class="flight-route">
+        <div>
+          <div class="iata">PMI</div>
+          <div class="city-label">Palma</div>
+        </div>
+        <div class="route-mid"><div class="route-line">✈️</div></div>
+        <div>
+          <div class="iata">MAD</div>
+          <div class="city-label right">Madrid</div>
+        </div>
+      </div>
+      <div class="flight-tags">
+        <span class="tag">📅 Thu, Jul 23</span>
+        <span class="tag">🛫 10:40 → 12:05</span>
+        <span class="tag">1h 25m · Nonstop</span>
+        <a href="https://www.aireuropa.com/en/flights/manage-your-booking" target="_blank"><span class="tag">Air Europa ↗</span></a>
+      </div>
+    </div>
+
+    <!-- MAD → JFK -->
+    <div class="flight-card">
+      <div class="flight-header">
+        <span class="badge bb">Air Europa · UX 091</span>
+        <span class="badge bg">Business Class</span>
+      </div>
+      <div class="flight-route">
+        <div>
+          <div class="iata">MAD</div>
+          <div class="city-label">Madrid</div>
+        </div>
+        <div class="route-mid"><div class="route-line">✈️</div></div>
+        <div>
+          <div class="iata">JFK</div>
+          <div class="city-label right">New York</div>
+        </div>
+      </div>
+      <div class="flight-tags">
+        <span class="tag">📅 Thu, Jul 23</span>
+        <span class="tag">🛫 15:35 → 17:45</span>
+        <span class="tag">8h 10m · Nonstop</span>
+        <span class="tag">Boeing 787-9 · T1 → T4</span>
+        <a href="https://www.aireuropa.com/en/flights/manage-your-booking" target="_blank"><span class="tag">Air Europa ↗</span></a>
+      </div>
+    </div>
+
+    <!-- Madrid layover note -->
+    <div style="background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:12px 14px;font-size:12px;color:var(--muted)">
+      <span style="color:var(--accent);font-weight:600">⏱ Madrid layover</span> — Arrive MAD 12:05, depart 15:35 · <strong style="color:var(--text)">3h 30m</strong> · Both flights Terminal 1
+    </div>
+  </section>
+
+  <!-- ── HOTELS ── -->
+  <section id="hotels">
+    <div class="sec-title">🏨 Hotels</div>
+
+    <!-- Lindner Antwerp -->
+    <div class="card">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:12px">
+        <div>
+          <div style="font-size:15px;font-weight:700">
+            <a href="https://www.google.com/maps/search/?api=1&query=Lindner+Hotel+Antwerp" target="_blank" style="color:var(--text)">Lindner Hotel Antwerp ↗</a>
+          </div>
+          <div style="font-size:12px;color:var(--muted);margin-top:2px">Antwerp, Belgium · TML Package</div>
+        </div>
+        <span class="badge ba">4 Nights</span>
+      </div>
+      <div class="card-row"><span class="card-label">Check-in</span><span class="card-value">Thu, Jul 16 · from 15:00</span></div>
+      <div class="card-row"><span class="card-label">Check-out</span><span class="card-value">Mon, Jul 20 · until 12:00</span></div>
+      <div class="card-row"><span class="card-label">Included</span><span class="card-value">Festival shuttles daily</span></div>
+      <div class="card-row"><span class="card-label">Package ref</span><span class="card-value" style="font-family:monospace;letter-spacing:.5px">HW1-RZKLJL8GQ8</span></div>
+      <div style="margin-top:12px;display:flex;gap:6px;flex-wrap:wrap">
+        <a href="https://www.lindner.de/en/antwerp-hotel" target="_blank"><span class="tag">🌐 Hotel Website ↗</span></a>
+        <a href="https://www.google.com/maps/search/?api=1&query=Lindner+Hotel+Antwerp" target="_blank"><span class="tag">📍 Maps ↗</span></a>
+      </div>
+    </div>
+
+    <!-- Mallorca -->
+    <div class="card">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:12px">
+        <div>
+          <div style="font-size:15px;font-weight:700">
+            <a href="https://www.google.com/maps/search/?api=1&query=Calle+Mar+Negra+2+Playa+de+Palma+Mallorca" target="_blank" style="color:var(--text)">Playa de Palma Hotel ↗</a>
+          </div>
+          <div style="font-size:12px;color:var(--muted);margin-top:2px">Calle Mar Negra 2, Playa de Palma, Mallorca</div>
+        </div>
+        <span class="badge ba">3 Nights</span>
+      </div>
+      <div class="card-row"><span class="card-label">Check-in</span><span class="card-value">Mon, Jul 20 · from 3:00 PM</span></div>
+      <div class="card-row"><span class="card-label">Check-out</span><span class="card-value">Thu, Jul 23 · until 12:00 PM</span></div>
+      <div class="card-row"><span class="card-label">Room</span><span class="card-value">Double/Twin · Garden View</span></div>
+      <div class="card-row"><span class="card-label">Guests</span><span class="card-value">2 adults</span></div>
+      <div style="margin-top:12px">
+        <a href="https://www.google.com/maps/search/?api=1&query=Calle+Mar+Negra+2+Playa+de+Palma+Mallorca" target="_blank"><span class="tag">📍 Maps ↗</span></a>
+      </div>
+    </div>
+    <div class="notice">⚠️ Mallorca hotel name not confirmed — update when available.</div>
+  </section>
+
+  <!-- ── FESTIVAL ── -->
+  <section id="festival">
+    <div class="sec-title">🎪 Tomorrowland · Weekend One</div>
+
+    <div class="card" style="margin-bottom:16px">
+      <div style="font-size:15px;font-weight:700;margin-bottom:10px">Belgian Journey Package</div>
+      <div class="card-row"><span class="card-label">Package ref</span><span class="card-value" style="font-family:monospace">HW1-RZKLJL8GQ8</span></div>
+      <div class="card-row"><span class="card-label">Hotel</span><span class="card-value">Lindner Hotel Antwerp</span></div>
+      <div class="card-row"><span class="card-label">Includes</span><span class="card-value">Hotel · Shuttles · Invited pre-party</span></div>
+      <div class="card-row"><span class="card-label">Festival</span><span class="card-value">Fri–Sun, Jul 17–19</span></div>
+      <div class="card-row"><span class="card-label">Venue</span><span class="card-value">
+        <a href="https://www.google.com/maps/search/?api=1&query=Tomorrowland+Boom+Belgium" target="_blank">Boom, Belgium ↗</a>
+      </span></div>
+    </div>
+
+    <!-- Day-by-day festival schedule -->
+    <div class="fest-day">
+      <div class="fest-day-hd">
+        <span class="fest-day-title">Thu, Jul 16</span>
+        <span class="fest-day-label">Pre-Festival</span>
+      </div>
+      <div class="fest-day-body">
+        <div class="fest-ev">
+          <div class="fest-time">09:00</div>
+          <div><div class="fest-title">Train shuttle from Antwerp Central</div><div class="fest-note">To Belgian Journey / Invited event</div></div>
+        </div>
+        <div class="fest-ev">
+          <div class="fest-time">15:00</div>
+          <div><div class="fest-title">Check-in · Lindner Hotel Antwerp</div></div>
+        </div>
+        <div class="fest-ev">
+          <div class="fest-time">18:00</div>
+          <div>
+            <div class="fest-title">🌟 Invited — pre-festival party</div>
+            <div class="fest-note">
+              <a href="https://www.google.com/maps/search/?api=1&query=Rue+Picard+11+Brussels+Belgium" target="_blank">Rue Picard 11, Brussels ↗</a> · Until midnight
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="fest-day">
+      <div class="fest-day-hd">
+        <span class="fest-day-title">Fri, Jul 17</span>
+        <span class="fest-day-label">Day 1 🎶</span>
+      </div>
+      <div class="fest-day-body">
+        <div class="fest-ev">
+          <div class="fest-time">11:00</div>
+          <div><div class="fest-title">🚌 Shuttle · Hotel → Festival</div></div>
+        </div>
+        <div class="fest-ev">
+          <div class="fest-time">All Day</div>
+          <div><div class="fest-title">Tomorrowland · Day 1</div><div class="fest-note">Boom, Belgium</div></div>
+        </div>
+        <div class="fest-ev">
+          <div class="fest-time">01:00</div>
+          <div><div class="fest-title">🚌 Shuttle · Festival → Hotel</div></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="fest-day">
+      <div class="fest-day-hd">
+        <span class="fest-day-title">Sat, Jul 18</span>
+        <span class="fest-day-label">Day 2 🎶</span>
+      </div>
+      <div class="fest-day-body">
+        <div class="fest-ev">
+          <div class="fest-time">11:00</div>
+          <div><div class="fest-title">🚌 Shuttle · Hotel → Festival</div></div>
+        </div>
+        <div class="fest-ev">
+          <div class="fest-time">All Day</div>
+          <div><div class="fest-title">Tomorrowland · Day 2</div><div class="fest-note">Boom, Belgium</div></div>
+        </div>
+        <div class="fest-ev">
+          <div class="fest-time">01:00</div>
+          <div><div class="fest-title">🚌 Shuttle · Festival → Hotel</div></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="fest-day">
+      <div class="fest-day-hd">
+        <span class="fest-day-title">Sun, Jul 19</span>
+        <span class="fest-day-label">Day 3 🎶</span>
+      </div>
+      <div class="fest-day-body">
+        <div class="fest-ev">
+          <div class="fest-time">11:00</div>
+          <div><div class="fest-title">🚌 Shuttle · Hotel → Festival</div></div>
+        </div>
+        <div class="fest-ev">
+          <div class="fest-time">All Day</div>
+          <div><div class="fest-title">Tomorrowland · Day 3 (Final)</div><div class="fest-note">Boom, Belgium</div></div>
+        </div>
+        <div class="fest-ev">
+          <div class="fest-time">01:00</div>
+          <div><div class="fest-title">🚌 Shuttle · Festival → Hotel</div></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── ITINERARY ── -->
+  <section id="itinerary">
+    <div class="sec-title">📅 Full Itinerary</div>
+    <div id="itin-container"></div>
+  </section>
+
+  <!-- ── MAP ── -->
+  <section id="map-sec">
+    <div class="sec-title">🗺️ Belgium Map</div>
+    <div id="tml-map"></div>
+    <div style="font-size:11px;color:var(--dim);margin-top:8px;text-align:center">Tap a pin to open in Google Maps</div>
+  </section>
+
+  <!-- ── WEATHER ── -->
+  <section id="weather">
+    <div class="sec-title">🌤️ Weather</div>
+    <div class="wx-wrap">
+      <div class="wx-panel">
+        <div class="wx-panel-title">🇧🇪 Antwerp · Jul 16–20</div>
+        <div id="wx-antwerp"><div class="wx-notice">Loading…</div></div>
+      </div>
+      <div class="wx-panel">
+        <div class="wx-panel-title">🇪🇸 Palma · Jul 20–23</div>
+        <div id="wx-palma"><div class="wx-notice">Loading…</div></div>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<footer>Hans · Tomorrowland 2026 🎶</footer>
+
+<script>
+// ── NAV ───────────────────────────────────────────────────────────────────────
+function goTo(id, btn) {
+  document.getElementById(id).scrollIntoView({ behavior: 'smooth' });
+  document.querySelectorAll('.pill').forEach(p => p.classList.remove('active'));
+  btn.classList.add('active');
+}
+const SECS = ['flights','hotels','festival','itinerary','map-sec','weather'];
+window.addEventListener('scroll', () => {
+  let cur = SECS[0];
+  SECS.forEach(id => { const el = document.getElementById(id); if (el && el.getBoundingClientRect().top < 100) cur = id; });
+  document.querySelectorAll('.pill').forEach(p => p.classList.toggle('active', p.dataset.section === cur));
+}, { passive: true });
+
+// ── ITINERARY ─────────────────────────────────────────────────────────────────
+const ITIN = [
+  { day:'Day 1', date:'Wed, Jul 15', special:null, events:[
+    { t:'5:45 PM', title:'✈️ Depart JFK — New York', note:'AA42 → Paris CDG · Premium Economy · 6h 35m' },
+  ]},
+  { day:'Day 2', date:'Thu, Jul 16', special:'🇧🇪 Belgium', events:[
+    { t:'7:20 AM',  title:'Arrive Paris CDG', note:'American Airlines AA42' },
+    { t:'14:22',    title:'🚄 Eurostar — Paris Gare du Nord → Brussels Midi', note:'1h 22m · Ref GFFCYM · Coach 5 Seat 62' },
+    { t:'15:44',    title:'Arrive Brussels · Head to Antwerp', note:'~35 min by train' },
+    { t:'15:00+',   title:'Check in · Lindner Hotel Antwerp', note:'TML Package' },
+    { t:'18:00',    title:'🌟 Invited pre-festival party', note:'Rue Picard 11, Brussels · Until midnight' },
+  ]},
+  { day:'Day 3', date:'Fri, Jul 17', special:'🎶 TML Day 1', events:[
+    { t:'11:00',    title:'🚌 Shuttle · Hotel → Festival', note:'Tomorrowland, Boom' },
+    { t:'All Day',  title:'Tomorrowland Weekend 1 — Day 1', note:'' },
+    { t:'01:00',    title:'🚌 Shuttle · Festival → Hotel', note:'' },
+  ]},
+  { day:'Day 4', date:'Sat, Jul 18', special:'🎶 TML Day 2', events:[
+    { t:'11:00',    title:'🚌 Shuttle · Hotel → Festival', note:'' },
+    { t:'All Day',  title:'Tomorrowland Weekend 1 — Day 2', note:'' },
+    { t:'01:00',    title:'🚌 Shuttle · Festival → Hotel', note:'' },
+  ]},
+  { day:'Day 5', date:'Sun, Jul 19', special:'🎶 TML Day 3', events:[
+    { t:'11:00',    title:'🚌 Shuttle · Hotel → Festival', note:'' },
+    { t:'All Day',  title:'Tomorrowland Weekend 1 — Day 3 (Final)', note:'' },
+    { t:'01:00',    title:'🚌 Shuttle · Festival → Hotel', note:'' },
+  ]},
+  { day:'Day 6', date:'Mon, Jul 20', special:'🌊 Mallorca', events:[
+    { t:'Until 12', title:'Check out · Lindner Hotel Antwerp', note:'' },
+    { t:'15:10',    title:'✈️ FR7837 Brussels CRL → Palma PMI', note:'Ryanair · 2h 10m · Res U6HQ3H Seat 14D' },
+    { t:'17:20',    title:'Arrive Palma de Mallorca', note:'Check in hotel · Playa de Palma' },
+  ]},
+  { day:'Day 7', date:'Tue, Jul 21', special:null, events:[
+    { t:'All Day',  title:'Free day — Mallorca 🏖️', note:'Beach, old town Palma, coves' },
+  ]},
+  { day:'Day 8', date:'Wed, Jul 22', special:null, events:[
+    { t:'All Day',  title:'Free day — Mallorca', note:'' },
+  ]},
+  { day:'Day 9', date:'Thu, Jul 23', special:'🏠 Home', events:[
+    { t:'Until 12', title:'Check out · Playa de Palma Hotel', note:'' },
+    { t:'10:40',    title:'✈️ UX6030 Palma PMI → Madrid MAD', note:'Air Europa · 1h 25m · Ref B8N6FT Seat 6F' },
+    { t:'12:05',    title:'Arrive Madrid · Terminal 1', note:'3h 30m connection' },
+    { t:'15:35',    title:'✈️ UX091 Madrid MAD → New York JFK', note:'Air Europa · 8h 10m · Business · Boeing 787-9' },
+    { t:'17:45',    title:'Arrive JFK · Terminal 4', note:'🏠 Home' },
+  ]},
+];
+
+function renderItinerary() {
+  const c = document.getElementById('itin-container');
+  c.innerHTML = '';
+  ITIN.forEach(d => {
+    const b = document.createElement('div');
+    b.className = 'day-block';
+    b.innerHTML = `
+      <div class="day-hd">
+        <span class="day-num">${d.day}</span>
+        <span class="day-date">${d.date}</span>
+        ${d.special ? `<span class="day-special">${d.special}</span>` : ''}
+      </div>
+      <div class="day-body">${d.events.map(ev => `
+        <div class="ev">
+          <div class="ev-time">${ev.t}</div>
+          <div><div class="ev-title">${ev.title}</div>${ev.note ? `<div class="ev-note">${ev.note}</div>` : ''}</div>
+        </div>`).join('')}
+      </div>`;
+    c.appendChild(b);
+  });
+}
+
+// ── MAP ───────────────────────────────────────────────────────────────────────
+function initMap() {
+  const map = L.map('tml-map').setView([51.05, 4.40], 9);
+  L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
+    attribution: '© OpenStreetMap © CARTO', maxZoom: 19
+  }).addTo(map);
+
+  function dot(color) {
+    return L.divIcon({
+      className: '',
+      html: `<div style="width:13px;height:13px;background:${color};border-radius:50%;border:2.5px solid #fff;box-shadow:0 1px 4px rgba(0,0,0,.4)"></div>`,
+      iconSize: [13,13], iconAnchor: [6,6]
+    });
+  }
+
+  const pins = [
+    { lat:51.2167, lng:4.4200,  label:'🏨 Lindner Hotel Antwerp',    q:'Lindner+Hotel+Antwerp',              color:'#f59e0b' },
+    { lat:51.0853, lng:4.3679,  label:'🎪 Tomorrowland — Boom',       q:'Tomorrowland+Boom+Belgium',          color:'#c084fc' },
+    { lat:50.8353, lng:4.3362,  label:'🚄 Brussels Midi (Eurostar)',   q:'Brussels+Midi+Station',              color:'#60a5fa' },
+    { lat:50.8700, lng:4.3430,  label:'🌟 Invited venue — Rue Picard', q:'Rue+Picard+11+Brussels+Belgium',     color:'#f59e0b' },
+    { lat:51.2172, lng:4.4200,  label:'🚉 Antwerp Central Station',    q:'Antwerp+Central+Train+Station',      color:'#60a5fa' },
+  ];
+
+  const _s = document.createElement('style');
+  _s.textContent = `.dp .leaflet-popup-content-wrapper{background:#fff;border:1px solid #ddd;color:#111;border-radius:8px;box-shadow:0 4px 16px rgba(0,0,0,.18);padding:2px}.dp .leaflet-popup-tip{background:#fff}.dp .leaflet-popup-content{margin:8px 12px}`;
+  document.head.appendChild(_s);
+
+  pins.forEach(p => {
+    L.marker([p.lat, p.lng], { icon: dot(p.color) })
+      .addTo(map)
+      .bindPopup(
+        `<div style="font-size:12px;font-weight:600;color:#111;line-height:1.6">${p.label}<br>
+         <a href="https://www.google.com/maps/search/?api=1&query=${p.q}" target="_blank"
+            style="color:#1a73e8;font-weight:400;font-size:11px">Open in Google Maps ↗</a></div>`,
+        { className: 'dp' }
+      );
+  });
+}
+
+// ── WEATHER ───────────────────────────────────────────────────────────────────
+const WMO = {0:'☀️',1:'🌤️',2:'⛅',3:'☁️',45:'🌫️',48:'🌫️',51:'🌦️',53:'🌦️',55:'🌧️',61:'🌧️',63:'🌧️',65:'🌧️',71:'❄️',73:'❄️',75:'❄️',80:'🌦️',81:'🌧️',82:'⛈️',95:'⛈️'};
+
+async function fetchWx(lat, lon, start, end, containerId, tz) {
+  const container = document.getElementById(containerId);
+  try {
+    const url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&daily=temperature_2m_max,temperature_2m_min,weathercode&timezone=${encodeURIComponent(tz)}&forecast_days=16`;
+    const data = await (await fetch(url)).json();
+    const days = data.daily.time;
+    const s = new Date(start), e = new Date(end);
+    const indices = days.reduce((a, d, i) => { const dt = new Date(d+'T00:00:00'); if (dt >= s && dt <= e) a.push(i); return a; }, []);
+    if (!indices.length) {
+      const daysAway = Math.ceil((s - new Date()) / 86400000);
+      container.innerHTML = `<div class="wx-notice">Available in ~${daysAway} days</div>`;
+      return;
+    }
+    const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+    container.innerHTML = '<div class="wx-scroll" id="ws-'+containerId+'"></div>';
+    const grid = document.getElementById('ws-'+containerId);
+    indices.forEach(i => {
+      const dt = new Date(days[i]+'T00:00:00');
+      const cell = document.createElement('div'); cell.className = 'wx-cell';
+      cell.innerHTML = `<div class="wx-date">${months[dt.getMonth()]} ${dt.getDate()}</div><div class="wx-icon">${WMO[data.daily.weathercode[i]]||'🌤️'}</div><div class="wx-hi">${Math.round(data.daily.temperature_2m_max[i])}°C</div><div class="wx-lo">${Math.round(data.daily.temperature_2m_min[i])}°C</div>`;
+      grid.appendChild(cell);
+    });
+  } catch { container.innerHTML = '<div class="wx-notice">Unavailable</div>'; }
+}
+
+// ── INIT ─────────────────────────────────────────────────────────────────────
+renderItinerary();
+initMap();
+fetchWx(51.2194, 4.4025, '2026-07-16', '2026-07-20', 'wx-antwerp', 'Europe/Brussels');
+fetchWx(39.5696, 2.6502, '2026-07-20', '2026-07-23', 'wx-palma', 'Europe/Madrid');
+</script>
+</body>
+</html>
