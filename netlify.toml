@@ -1,11 +1,11 @@
 [[redirects]]
-  from = "/"
+  from = "/banff"
   to = "/banff/index.html"
   status = 200
 
 [[redirects]]
-  from = "/banff"
-  to = "/banff/index.html"
+  from = "/tomorrowland"
+  to = "/tomorrowland/index.html"
   status = 200
 
 [build]
