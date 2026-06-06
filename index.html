@@ -6,7 +6,7 @@
   <title>Trip Itineraries</title>
   <style>
     :root {
-      --bg: #0e0e0e; --surface: #1a1a1a; --border: #2a2a2a;
+      --bg: #0e0e0e; --surface: #1a1a1a; --surface2: #222; --border: #2a2a2a;
       --text: #e8e8e8; --muted: #999; --dim: #555;
       --accent: #4ade80; --accent-dim: rgba(74,222,128,.15);
     }
@@ -17,6 +17,9 @@
       min-height: 100vh; display: flex; flex-direction: column;
       align-items: center; justify-content: center; padding: 24px;
     }
+
+    /* ── HUB ── */
+    #hub { display: none; flex-direction: column; align-items: center; width: 100%; }
     h1 { font-size: 22px; font-weight: 700; margin-bottom: 6px; }
     .sub { color: var(--muted); font-size: 13px; margin-bottom: 32px; }
     .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; width: 100%; max-width: 600px; }
@@ -24,8 +27,7 @@
     .card {
       background: var(--surface); border: 1px solid var(--border);
       border-radius: 14px; padding: 20px 18px;
-      transition: border-color .15s, transform .15s;
-      cursor: pointer;
+      transition: border-color .15s, transform .15s; cursor: pointer;
     }
     .card:hover { border-color: var(--accent); transform: translateY(-2px); }
     .card-emoji { font-size: 28px; margin-bottom: 10px; }
@@ -36,32 +38,158 @@
     .card.soon:hover { border-color: var(--border); transform: none; }
     .soon-label { font-size: 11px; color: var(--dim); margin-top: 6px; }
     footer { color: var(--dim); font-size: 12px; margin-top: 40px; }
+
+    /* ── PIN SCREEN ── */
+    #pin-screen {
+      display: flex; flex-direction: column; align-items: center; gap: 32px;
+    }
+    .pin-title { font-size: 16px; font-weight: 600; color: var(--muted); letter-spacing: .5px; }
+    .pin-dots {
+      display: flex; gap: 16px;
+    }
+    .dot {
+      width: 14px; height: 14px; border-radius: 50%;
+      border: 2px solid var(--border); background: transparent;
+      transition: background .15s, border-color .15s;
+    }
+    .dot.filled { background: var(--accent); border-color: var(--accent); }
+    .dot.error { background: #f87171; border-color: #f87171; }
+    .keypad {
+      display: grid; grid-template-columns: repeat(3, 72px); gap: 12px;
+    }
+    .key {
+      height: 72px; border-radius: 50%; border: none;
+      background: var(--surface); color: var(--text);
+      font-size: 20px; font-weight: 500; cursor: pointer;
+      transition: background .1s, transform .1s;
+      display: flex; align-items: center; justify-content: center;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .key:hover { background: var(--surface2); }
+    .key:active { transform: scale(.92); background: var(--surface2); }
+    .key.empty { background: transparent; cursor: default; }
+    .key.empty:hover { background: transparent; }
+    .key.empty:active { transform: none; }
+    .key-del { font-size: 16px; }
+
+    @keyframes shake {
+      0%,100%{ transform: translateX(0); }
+      20%    { transform: translateX(-8px); }
+      40%    { transform: translateX(8px); }
+      60%    { transform: translateX(-6px); }
+      80%    { transform: translateX(6px); }
+    }
+    .shake { animation: shake .35s ease; }
   </style>
 </head>
 <body>
-  <h1>✈️ Trip Itineraries</h1>
-  <div class="sub">Hans's travel hub</div>
-  <div class="grid">
 
-    <a href="/banff">
-      <div class="card">
-        <div class="card-emoji">🏔️</div>
-        <div class="card-title">Banff Family Trip</div>
-        <div class="card-dates">Jun 29 – Jul 6, 2026</div>
-        <div class="card-arrow">View itinerary →</div>
-      </div>
-    </a>
-
-    <a href="/tomorrowland">
-      <div class="card soon">
-        <div class="card-emoji">🎶</div>
-        <div class="card-title">Tomorrowland</div>
-        <div class="card-dates">Coming soon</div>
-        <div class="soon-label">In progress</div>
-      </div>
-    </a>
-
+  <!-- PIN -->
+  <div id="pin-screen">
+    <div class="pin-title">Enter PIN</div>
+    <div class="pin-dots" id="dots">
+      <div class="dot" id="d0"></div>
+      <div class="dot" id="d1"></div>
+      <div class="dot" id="d2"></div>
+      <div class="dot" id="d3"></div>
+    </div>
+    <div class="keypad">
+      <button class="key" onclick="press('1')">1</button>
+      <button class="key" onclick="press('2')">2</button>
+      <button class="key" onclick="press('3')">3</button>
+      <button class="key" onclick="press('4')">4</button>
+      <button class="key" onclick="press('5')">5</button>
+      <button class="key" onclick="press('6')">6</button>
+      <button class="key" onclick="press('7')">7</button>
+      <button class="key" onclick="press('8')">8</button>
+      <button class="key" onclick="press('9')">9</button>
+      <button class="key empty"></button>
+      <button class="key" onclick="press('0')">0</button>
+      <button class="key key-del" onclick="del()">⌫</button>
+    </div>
   </div>
-  <footer>Built with Claude</footer>
+
+  <!-- HUB -->
+  <div id="hub">
+    <h1>✈️ Trip Itineraries</h1>
+    <div class="sub">Hans's travel hub</div>
+    <div class="grid">
+
+      <a href="/banff">
+        <div class="card">
+          <div class="card-emoji">🏔️</div>
+          <div class="card-title">Banff Family Trip</div>
+          <div class="card-dates">Jun 29 – Jul 6, 2026</div>
+          <div class="card-arrow">View itinerary →</div>
+        </div>
+      </a>
+
+      <a href="/tomorrowland">
+        <div class="card soon">
+          <div class="card-emoji">🎶</div>
+          <div class="card-title">Tomorrowland</div>
+          <div class="card-dates">Coming soon</div>
+          <div class="soon-label">In progress</div>
+        </div>
+      </a>
+
+    </div>
+    <footer>Built with Claude</footer>
+  </div>
+
+  <script>
+    const PIN = '1218';
+    const KEY = 'hub_auth';
+    let entry = '';
+
+    // Already unlocked on this device?
+    if (localStorage.getItem(KEY) === 'ok') unlock(false);
+
+    function unlock(save = true) {
+      document.getElementById('pin-screen').style.display = 'none';
+      document.getElementById('hub').style.display = 'flex';
+      if (save) localStorage.setItem(KEY, 'ok');
+    }
+
+    function press(d) {
+      if (entry.length >= 4) return;
+      entry += d;
+      updateDots();
+      if (entry.length === 4) {
+        if (entry === PIN) {
+          unlock();
+        } else {
+          const dots = document.getElementById('dots');
+          dots.querySelectorAll('.dot').forEach(el => el.classList.add('error'));
+          dots.classList.add('shake');
+          setTimeout(() => {
+            dots.querySelectorAll('.dot').forEach(el => {
+              el.classList.remove('filled','error');
+            });
+            dots.classList.remove('shake');
+            entry = '';
+          }, 600);
+        }
+      }
+    }
+
+    function del() {
+      entry = entry.slice(0, -1);
+      updateDots();
+    }
+
+    function updateDots() {
+      for (let i = 0; i < 4; i++) {
+        document.getElementById('d' + i).classList.toggle('filled', i < entry.length);
+      }
+    }
+
+    // Keyboard support
+    document.addEventListener('keydown', e => {
+      if (document.getElementById('pin-screen').style.display === 'none') return;
+      if (/^[0-9]$/.test(e.key)) press(e.key);
+      if (e.key === 'Backspace') del();
+    });
+  </script>
 </body>
 </html>
