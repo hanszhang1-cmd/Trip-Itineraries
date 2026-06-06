@@ -20,24 +20,23 @@
 
     /* ── HUB ── */
     #hub { display: none; flex-direction: column; align-items: center; width: 100%; }
-    h1 { font-size: 22px; font-weight: 700; margin-bottom: 6px; }
-    .sub { color: var(--muted); font-size: 13px; margin-bottom: 32px; }
-    .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; width: 100%; max-width: 600px; }
+    h1 { font-size: 26px; font-weight: 800; margin-bottom: 8px; letter-spacing: -.3px; }
+    .sub { color: #aaa; font-size: 14px; margin-bottom: 36px; }
+    .grid { display: flex; flex-direction: column; gap: 14px; width: 100%; max-width: 480px; }
     a { text-decoration: none; }
     .card {
-      background: var(--surface); border: 1px solid var(--border);
-      border-radius: 14px; padding: 20px 18px;
-      transition: border-color .15s, transform .15s; cursor: pointer;
+      background: #1c1c1c; border: 1px solid #333;
+      border-radius: 18px; padding: 24px 22px;
+      display: flex; align-items: center; gap: 18px;
+      transition: border-color .15s, transform .15s, background .15s; cursor: pointer;
     }
-    .card:hover { border-color: var(--accent); transform: translateY(-2px); }
-    .card-emoji { font-size: 28px; margin-bottom: 10px; }
-    .card-title { font-size: 15px; font-weight: 700; margin-bottom: 4px; }
-    .card-dates { font-size: 12px; color: var(--muted); margin-bottom: 8px; }
-    .card-arrow { font-size: 12px; color: var(--accent); }
-    .card.soon { opacity: .45; cursor: default; }
-    .card.soon:hover { border-color: var(--border); transform: none; }
-    .soon-label { font-size: 11px; color: var(--dim); margin-top: 6px; }
-    footer { color: var(--dim); font-size: 12px; margin-top: 40px; }
+    .card:hover { border-color: var(--accent); transform: translateY(-2px); background: #212121; }
+    .card-emoji { font-size: 40px; flex-shrink: 0; line-height: 1; }
+    .card-body { flex: 1; min-width: 0; }
+    .card-title { font-size: 17px; font-weight: 700; margin-bottom: 5px; color: #f0f0f0; }
+    .card-dates { font-size: 13px; color: #bbb; margin-bottom: 8px; }
+    .card-arrow { font-size: 13px; color: var(--accent); font-weight: 600; }
+    footer { color: #555; font-size: 12px; margin-top: 44px; }
 
     /* ── PIN SCREEN ── */
     #pin-screen {
@@ -122,18 +121,22 @@
       <a href="/banff">
         <div class="card">
           <div class="card-emoji">🏔️</div>
-          <div class="card-title">Banff Family Trip</div>
-          <div class="card-dates">Jun 29 – Jul 6, 2026</div>
-          <div class="card-arrow">View itinerary →</div>
+          <div class="card-body">
+            <div class="card-title">Banff Family Trip</div>
+            <div class="card-dates">Jun 29 – Jul 6, 2026</div>
+            <div class="card-arrow">View itinerary →</div>
+          </div>
         </div>
       </a>
 
       <a href="/tomorrowland">
         <div class="card">
           <div class="card-emoji">🎶</div>
-          <div class="card-title">Tomorrowland 2026</div>
-          <div class="card-dates">Jul 15 – 23, 2026</div>
-          <div class="card-arrow">View itinerary →</div>
+          <div class="card-body">
+            <div class="card-title">Tomorrowland 2026</div>
+            <div class="card-dates">Jul 15 – 23, 2026</div>
+            <div class="card-arrow">View itinerary →</div>
+          </div>
         </div>
       </a>
 
