@@ -95,8 +95,7 @@
     </div>
     <input id="pin-input" type="tel" inputmode="numeric" maxlength="4"
            autocomplete="one-time-code"
-           style="position:absolute;opacity:0;width:1px;height:1px;pointer-events:none"
-           oninput="onInput(this)">
+           style="position:absolute;opacity:0;width:1px;height:1px;pointer-events:none">
 
     <div class="keypad" onclick="document.getElementById('pin-input').focus()">
       <button class="key" onclick="press('1')">1</button>
@@ -145,78 +144,59 @@
   <script>
     const PIN = '1218';
     const KEY = 'hub_auth';
-    let entry = '';
 
-    // Already unlocked on this device?
-    if (localStorage.getItem(KEY) === 'ok') unlock(false);
+    // Remember unlock for this browser session only (clears when tab/browser closed)
+    if (sessionStorage.getItem(KEY) === 'ok') unlock(false);
 
     function unlock(save = true) {
       document.getElementById('pin-screen').style.display = 'none';
       document.getElementById('hub').style.display = 'flex';
-      if (save) localStorage.setItem(KEY, 'ok');
+      if (save) sessionStorage.setItem(KEY, 'ok');
     }
 
-    function press(d) {
-      if (entry.length >= 4) return;
-      entry += d;
-      updateDots();
-      if (entry.length === 4) {
-        if (entry === PIN) {
-          unlock();
-        } else {
-          const dots = document.getElementById('dots');
-          dots.querySelectorAll('.dot').forEach(el => el.classList.add('error'));
-          dots.classList.add('shake');
-          setTimeout(() => {
-            dots.querySelectorAll('.dot').forEach(el => {
-              el.classList.remove('filled','error');
-            });
-            dots.classList.remove('shake');
-            entry = '';
-          }, 600);
-        }
-      }
-    }
-
-    function del() {
-      entry = entry.slice(0, -1);
-      updateDots();
-    }
-
-    function updateDots() {
-      for (let i = 0; i < 4; i++) {
-        document.getElementById('d' + i).classList.toggle('filled', i < entry.length);
-      }
-    }
-
-    // Auto-focus hidden input so typing works immediately
+    // ── Single source of truth: the hidden input value ──────────────────────
     const pinInput = document.getElementById('pin-input');
-    if (document.getElementById('pin-screen').style.display !== 'none') {
-      pinInput.focus();
-    }
-    // Re-focus if user clicks anywhere on the PIN screen
+
+    // Auto-focus so keyboard typing works immediately
+    setTimeout(() => pinInput.focus(), 50);
     document.getElementById('pin-screen').addEventListener('click', () => pinInput.focus());
 
-    function onInput(el) {
-      // Sync hidden input → entry state
-      const val = el.value.replace(/\D/g, '').slice(0, 4);
-      el.value = val;
-      entry = val;
-      updateDots();
-      if (entry.length === 4) {
-        el.value = '';
-        if (entry === PIN) {
-          unlock();
-        } else {
-          const dots = document.getElementById('dots');
-          dots.querySelectorAll('.dot').forEach(d => d.classList.add('error'));
-          dots.classList.add('shake');
-          setTimeout(() => {
-            dots.querySelectorAll('.dot').forEach(d => d.classList.remove('filled','error'));
-            dots.classList.remove('shake');
-            entry = '';
-          }, 600);
-        }
+    // Keypad buttons append to the hidden input directly
+    function press(d) {
+      if (pinInput.value.length >= 4) return;
+      pinInput.value += d;
+      handle();
+    }
+    function del() {
+      pinInput.value = pinInput.value.slice(0, -1);
+      handle();
+    }
+
+    // Keyboard typing fires the native input event
+    pinInput.addEventListener('input', () => {
+      pinInput.value = pinInput.value.replace(/\D/g, '').slice(0, 4);
+      handle();
+    });
+
+    function handle() {
+      const val = pinInput.value;
+      // Update dots
+      for (let i = 0; i < 4; i++) {
+        document.getElementById('d' + i).classList.toggle('filled', i < val.length);
+      }
+      if (val.length < 4) return;
+
+      if (val === PIN) {
+        unlock();
+      } else {
+        const dots = document.getElementById('dots');
+        dots.querySelectorAll('.dot').forEach(d => d.classList.add('error'));
+        dots.classList.add('shake');
+        setTimeout(() => {
+          dots.querySelectorAll('.dot').forEach(d => d.classList.remove('filled','error'));
+          dots.classList.remove('shake');
+          pinInput.value = '';
+        }, 600);
       }
     }
   </script>
