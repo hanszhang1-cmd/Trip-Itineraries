@@ -82,7 +82,7 @@
 
     /* ── FLIGHT CARD ── */
     .flight-card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 14px 16px; margin-bottom: 10px; }
-    .flight-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
+    .flight-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; flex-wrap: wrap; gap: 6px; }
     .flight-route { display: flex; align-items: center; gap: 8px; margin-bottom: 10px; }
     .iata { font-size: 26px; font-weight: 800; letter-spacing: 1px; }
     .route-mid { flex: 1; text-align: center; }
@@ -92,6 +92,20 @@
     .city-label.right { text-align: right; }
     .flight-tags { display: flex; flex-wrap: wrap; gap: 6px; }
     .tag { font-size: 11px; color: var(--muted); background: var(--surface2); padding: 3px 8px; border-radius: 6px; }
+
+    /* ── CREW FILTER ── */
+    .crew-filter { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 16px; }
+    .cpill {
+      background: var(--surface2); border: 1px solid var(--border);
+      color: var(--muted); padding: 6px 16px; border-radius: 20px;
+      cursor: pointer; font-size: 12px; font-weight: 500;
+      transition: all .15s; white-space: nowrap;
+    }
+    .cpill:hover { color: var(--text); border-color: var(--dim); }
+    .cpill[data-p="all"].active  { background: rgba(245,158,11,.15); border-color: var(--accent); color: var(--accent); font-weight: 600; }
+    .cpill[data-p="hans"].active { background: rgba(245,158,11,.15); border-color: var(--accent); color: var(--accent); font-weight: 600; }
+    .cpill[data-p="gurch"].active { background: rgba(96,165,250,.15); border-color: var(--blue); color: var(--blue); font-weight: 600; }
+    .cpill[data-p="connor"].active { background: rgba(74,222,128,.15); border-color: var(--green); color: var(--green); font-weight: 600; }
 
     /* ── FESTIVAL SCHEDULE ── */
     .fest-day { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; margin-bottom: 10px; overflow: hidden; }
@@ -165,7 +179,6 @@
     <button class="pill" data-section="itinerary" onclick="goTo('itinerary',this)">📅 Itinerary</button>
     <button class="pill" data-section="map-sec" onclick="goTo('map-sec',this)">🗺️ Map</button>
     <button class="pill" data-section="weather" onclick="goTo('weather',this)">🌤️ Weather</button>
-    <button class="pill" data-section="crew" onclick="goTo('crew',this)">👥 Crew</button>
   </div>
 </nav>
 
@@ -175,22 +188,52 @@
   <section id="flights">
     <div class="sec-title">✈️ Flights & Transport</div>
 
-    <!-- JFK → CDG -->
-    <div class="flight-card">
+    <!-- Person filter -->
+    <div class="crew-filter">
+      <button class="cpill active" data-p="all"    onclick="filterCrew('all',this)">🌍 All</button>
+      <button class="cpill"        data-p="hans"   onclick="filterCrew('hans',this)">Hans</button>
+      <button class="cpill"        data-p="gurch"  onclick="filterCrew('gurch',this)">Gurch</button>
+      <button class="cpill"        data-p="connor" onclick="filterCrew('connor',this)">Connor</button>
+    </div>
+
+    <!-- ── Wed Jul 15 ──────────────────────────────── -->
+
+    <!-- UA968 · Gurch · SFO → AMS -->
+    <div class="flight-card" data-person="gurch">
       <div class="flight-header">
-        <span class="badge bb">American · AA 42</span>
-        <span class="badge bp">UYOHDB</span>
+        <span class="badge bb">United · UA 968</span>
+        <div style="display:flex;gap:6px;align-items:center">
+          <span class="badge bp">GM622H</span>
+          <span class="badge bb" style="font-size:10px">Gurch</span>
+        </div>
       </div>
       <div class="flight-route">
-        <div>
-          <div class="iata">JFK</div>
-          <div class="city-label">New York</div>
-        </div>
+        <div><div class="iata">SFO</div><div class="city-label">San Francisco</div></div>
         <div class="route-mid"><div class="route-line">✈️</div></div>
-        <div>
-          <div class="iata">CDG</div>
-          <div class="city-label right">Paris</div>
+        <div><div class="iata">AMS</div><div class="city-label right">Amsterdam</div></div>
+      </div>
+      <div class="flight-tags">
+        <span class="tag">📅 Wed, Jul 15</span>
+        <span class="tag">🛫 2:55 PM → Thu 10:20 AM</span>
+        <span class="tag">Polaris Business · Seat 07L</span>
+        <span class="tag">Award</span>
+        <a href="https://www.united.com/en/us/manageres/mytrips" target="_blank"><span class="tag">United ↗</span></a>
+      </div>
+    </div>
+
+    <!-- AA42 · Hans · JFK → CDG -->
+    <div class="flight-card" data-person="hans">
+      <div class="flight-header">
+        <span class="badge bb">American · AA 42</span>
+        <div style="display:flex;gap:6px;align-items:center">
+          <span class="badge bp">UYOHDB</span>
+          <span class="badge ba" style="font-size:10px">Hans</span>
         </div>
+      </div>
+      <div class="flight-route">
+        <div><div class="iata">JFK</div><div class="city-label">New York</div></div>
+        <div class="route-mid"><div class="route-line">✈️</div></div>
+        <div><div class="iata">CDG</div><div class="city-label right">Paris</div></div>
       </div>
       <div class="flight-tags">
         <span class="tag">📅 Wed, Jul 15</span>
@@ -202,22 +245,39 @@
       </div>
     </div>
 
-    <!-- Paris → Brussels Eurostar -->
-    <div class="flight-card">
+    <!-- WS10 · Connor · YYC → CDG -->
+    <div class="flight-card" data-person="connor">
       <div class="flight-header">
-        <span class="badge bb">Eurostar</span>
-        <span class="badge ba">Ref GFFCYM · Coach 5 Seat 62</span>
+        <span class="badge bb">WestJet · WS 10</span>
+        <span class="badge bg" style="font-size:10px">Connor</span>
       </div>
       <div class="flight-route">
-        <div>
-          <div class="iata" style="font-size:18px">Paris</div>
-          <div class="city-label">Gare du Nord</div>
+        <div><div class="iata">YYC</div><div class="city-label">Calgary</div></div>
+        <div class="route-mid"><div class="route-line">✈️</div></div>
+        <div><div class="iata">CDG</div><div class="city-label right">Paris</div></div>
+      </div>
+      <div class="flight-tags">
+        <span class="tag">📅 Wed, Jul 15</span>
+        <span class="tag">🛫 19:10</span>
+      </div>
+    </div>
+
+    <!-- ── Thu Jul 16 ──────────────────────────────── -->
+
+    <!-- Eurostar · Hans + Connor · Paris → Brussels -->
+    <div class="flight-card" data-person="hans connor">
+      <div class="flight-header">
+        <span class="badge bb">Eurostar</span>
+        <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap">
+          <span class="badge ba">GFFCYM · Coach 5 Seat 62</span>
+          <span class="badge ba" style="font-size:10px">Hans</span>
+          <span class="badge bg" style="font-size:10px">Connor</span>
         </div>
+      </div>
+      <div class="flight-route">
+        <div><div class="iata" style="font-size:18px">Paris</div><div class="city-label">Gare du Nord</div></div>
         <div class="route-mid"><div class="route-line">🚄</div></div>
-        <div>
-          <div class="iata" style="font-size:18px">Brussels</div>
-          <div class="city-label right">Midi / Zuid</div>
-        </div>
+        <div><div class="iata" style="font-size:18px">Brussels</div><div class="city-label right">Midi / Zuid</div></div>
       </div>
       <div class="flight-tags">
         <span class="tag">📅 Thu, Jul 16</span>
@@ -227,22 +287,46 @@
       </div>
     </div>
 
-    <!-- Brussels CRL → PMI -->
-    <div class="flight-card">
+    <!-- ── Mon Jul 20 ──────────────────────────────── -->
+
+    <!-- RailClick · Gurch · Antwerp → Amsterdam ⚠️ -->
+    <div class="flight-card" data-person="gurch" style="border-color:rgba(248,113,113,.35)">
       <div class="flight-header">
-        <span class="badge bb">Ryanair · FR 7837</span>
-        <span class="badge ba">Res U6HQ3H · Seat 14D</span>
+        <span class="badge bb">RailClick Train</span>
+        <div style="display:flex;gap:6px;align-items:center">
+          <span class="badge" style="background:rgba(248,113,113,.15);color:#f87171">Ref 2407447</span>
+          <span class="badge bb" style="font-size:10px">Gurch</span>
+        </div>
       </div>
       <div class="flight-route">
-        <div>
-          <div class="iata">CRL</div>
-          <div class="city-label">Brussels</div>
+        <div><div class="iata" style="font-size:18px">Antwerp</div><div class="city-label">Centraal</div></div>
+        <div class="route-mid"><div class="route-line">🚂</div></div>
+        <div><div class="iata" style="font-size:18px">Amsterdam</div><div class="city-label right">Centraal</div></div>
+      </div>
+      <div class="flight-tags">
+        <span class="tag" style="color:#f87171">📅 Mon, Jul 20 · 06:28 → 07:50 ⚠️</span>
+        <span class="tag">1h 22m · Direct</span>
+        <a href="https://www.railclick.com" target="_blank"><span class="tag">RailClick ↗</span></a>
+      </div>
+      <div style="margin-top:10px;padding:8px 10px;background:rgba(248,113,113,.07);border:1px solid rgba(248,113,113,.2);border-radius:8px;font-size:11px;color:#f87171">
+        ⚠️ Needs rescheduling — 06:28 is ~4h after last festival shuttle. JetBlue isn't until Jul 21 11:20 AM, any afternoon train works.
+      </div>
+    </div>
+
+    <!-- FR7837 · Hans + Connor · Brussels → Palma -->
+    <div class="flight-card" data-person="hans connor">
+      <div class="flight-header">
+        <span class="badge bb">Ryanair · FR 7837</span>
+        <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap">
+          <span class="badge ba">U6HQ3H · Seat 14D</span>
+          <span class="badge ba" style="font-size:10px">Hans</span>
+          <span class="badge bg" style="font-size:10px">Connor</span>
         </div>
+      </div>
+      <div class="flight-route">
+        <div><div class="iata">CRL</div><div class="city-label">Brussels</div></div>
         <div class="route-mid"><div class="route-line">✈️</div></div>
-        <div>
-          <div class="iata">PMI</div>
-          <div class="city-label right">Palma</div>
-        </div>
+        <div><div class="iata">PMI</div><div class="city-label right">Palma</div></div>
       </div>
       <div class="flight-tags">
         <span class="tag">📅 Mon, Jul 20</span>
@@ -252,22 +336,90 @@
       </div>
     </div>
 
-    <!-- PMI → MAD -->
-    <div class="flight-card">
+    <!-- ── Tue Jul 21 ──────────────────────────────── -->
+
+    <!-- B6 0032 · Gurch · AMS → BOS -->
+    <div class="flight-card" data-person="gurch">
       <div class="flight-header">
-        <span class="badge bb">Air Europa · UX 6030</span>
-        <span class="badge ba">Ref B8N6FT · Seat 6F</span>
+        <span class="badge bb">JetBlue · B6 0032</span>
+        <div style="display:flex;gap:6px;align-items:center">
+          <span class="badge bp">KTJBUQ</span>
+          <span class="badge bb" style="font-size:10px">Gurch</span>
+        </div>
       </div>
       <div class="flight-route">
-        <div>
-          <div class="iata">PMI</div>
-          <div class="city-label">Palma</div>
-        </div>
+        <div><div class="iata">AMS</div><div class="city-label">Amsterdam</div></div>
         <div class="route-mid"><div class="route-line">✈️</div></div>
-        <div>
-          <div class="iata">MAD</div>
-          <div class="city-label right">Madrid</div>
+        <div><div class="iata">BOS</div><div class="city-label right">Boston</div></div>
+      </div>
+      <div class="flight-tags">
+        <span class="tag">📅 Tue, Jul 21</span>
+        <span class="tag">🛫 11:20 AM → 1:31 PM</span>
+        <span class="tag">Mint · Seat 4F</span>
+        <a href="https://www.jetblue.com/manage-trips" target="_blank"><span class="tag">JetBlue ↗</span></a>
+      </div>
+    </div>
+
+    <!-- B6 0733 · Gurch · BOS → SFO -->
+    <div class="flight-card" data-person="gurch">
+      <div class="flight-header">
+        <span class="badge bb">JetBlue · B6 0733</span>
+        <div style="display:flex;gap:6px;align-items:center">
+          <span class="badge bp">KTJBUQ</span>
+          <span class="badge bb" style="font-size:10px">Gurch</span>
         </div>
+      </div>
+      <div class="flight-route">
+        <div><div class="iata">BOS</div><div class="city-label">Boston</div></div>
+        <div class="route-mid"><div class="route-line">✈️</div></div>
+        <div><div class="iata">SFO</div><div class="city-label right">San Francisco</div></div>
+      </div>
+      <div class="flight-tags">
+        <span class="tag">📅 Tue, Jul 21</span>
+        <span class="tag">🛫 5:00 PM (T-C) → 8:34 PM (T-1)</span>
+        <span class="tag">Mint · Seat 4A</span>
+        <a href="https://www.jetblue.com/manage-trips" target="_blank"><span class="tag">JetBlue ↗</span></a>
+      </div>
+    </div>
+
+    <!-- Gurch BOS layover note -->
+    <div data-person="gurch" style="background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:12px 14px;font-size:12px;color:var(--muted);margin-bottom:10px">
+      <span style="color:var(--blue);font-weight:600">⏱ Gurch · Boston connection</span> — Arrives 1:31 PM, departs 5:00 PM · <strong style="color:var(--text)">3h 29m</strong> · T-C → T-C
+    </div>
+
+    <!-- ── Thu Jul 23 ──────────────────────────────── -->
+
+    <!-- VY3907 · Connor · PMI → BCN -->
+    <div class="flight-card" data-person="connor">
+      <div class="flight-header">
+        <span class="badge bb">Vueling · VY 3907</span>
+        <span class="badge bg" style="font-size:10px">Connor</span>
+      </div>
+      <div class="flight-route">
+        <div><div class="iata">PMI</div><div class="city-label">Palma</div></div>
+        <div class="route-mid"><div class="route-line">✈️</div></div>
+        <div><div class="iata">BCN</div><div class="city-label right">Barcelona</div></div>
+      </div>
+      <div class="flight-tags">
+        <span class="tag">📅 Thu, Jul 23</span>
+        <span class="tag">🛫 07:20</span>
+        <span class="tag">Nonstop</span>
+      </div>
+    </div>
+
+    <!-- UX6030 · Hans · PMI → MAD -->
+    <div class="flight-card" data-person="hans">
+      <div class="flight-header">
+        <span class="badge bb">Air Europa · UX 6030</span>
+        <div style="display:flex;gap:6px;align-items:center">
+          <span class="badge ba">B8N6FT · Seat 6F</span>
+          <span class="badge ba" style="font-size:10px">Hans</span>
+        </div>
+      </div>
+      <div class="flight-route">
+        <div><div class="iata">PMI</div><div class="city-label">Palma</div></div>
+        <div class="route-mid"><div class="route-line">✈️</div></div>
+        <div><div class="iata">MAD</div><div class="city-label right">Madrid</div></div>
       </div>
       <div class="flight-tags">
         <span class="tag">📅 Thu, Jul 23</span>
@@ -277,21 +429,32 @@
       </div>
     </div>
 
-    <!-- MAD → JFK -->
-    <div class="flight-card">
+    <!-- AC821 · Connor · BCN → Home -->
+    <div class="flight-card" data-person="connor">
       <div class="flight-header">
-        <span class="badge bb">Air Europa · UX 091</span>
+        <span class="badge bb">Air Canada · AC 821</span>
+        <span class="badge bg" style="font-size:10px">Connor</span>
       </div>
       <div class="flight-route">
-        <div>
-          <div class="iata">MAD</div>
-          <div class="city-label">Madrid</div>
-        </div>
+        <div><div class="iata">BCN</div><div class="city-label">Barcelona</div></div>
         <div class="route-mid"><div class="route-line">✈️</div></div>
-        <div>
-          <div class="iata">JFK</div>
-          <div class="city-label right">New York</div>
-        </div>
+        <div><div class="iata" style="font-size:20px">🏠</div><div class="city-label right">Home</div></div>
+      </div>
+      <div class="flight-tags">
+        <span class="tag">📅 Thu, Jul 23</span>
+      </div>
+    </div>
+
+    <!-- UX091 · Hans · MAD → JFK -->
+    <div class="flight-card" data-person="hans">
+      <div class="flight-header">
+        <span class="badge bb">Air Europa · UX 091</span>
+        <span class="badge ba" style="font-size:10px">Hans</span>
+      </div>
+      <div class="flight-route">
+        <div><div class="iata">MAD</div><div class="city-label">Madrid</div></div>
+        <div class="route-mid"><div class="route-line">✈️</div></div>
+        <div><div class="iata">JFK</div><div class="city-label right">New York</div></div>
       </div>
       <div class="flight-tags">
         <span class="tag">📅 Thu, Jul 23</span>
@@ -302,9 +465,9 @@
       </div>
     </div>
 
-    <!-- Madrid layover note -->
-    <div style="background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:12px 14px;font-size:12px;color:var(--muted)">
-      <span style="color:var(--accent);font-weight:600">⏱ Madrid layover</span> — Arrive MAD 12:05, depart 15:35 · <strong style="color:var(--text)">3h 30m</strong> · Both flights Terminal 1
+    <!-- Hans Madrid layover note -->
+    <div data-person="hans" style="background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:12px 14px;font-size:12px;color:var(--muted);margin-bottom:10px">
+      <span style="color:var(--accent);font-weight:600">⏱ Hans · Madrid layover</span> — Arrive MAD 12:05, depart 15:35 · <strong style="color:var(--text)">3h 30m</strong> · Both T1
     </div>
   </section>
 
@@ -489,260 +652,6 @@
     </div>
   </section>
 
-  <!-- ── CREW ── -->
-  <section id="crew">
-    <div class="sec-title">👥 Crew</div>
-
-    <!-- Gurchetan header -->
-    <div style="display:flex;align-items:center;gap:12px;margin-bottom:14px">
-      <div style="width:42px;height:42px;border-radius:50%;background:var(--surface2);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0">🧑</div>
-      <div>
-        <div style="font-size:15px;font-weight:700">Gurch Dhillon</div>
-        <div style="font-size:12px;color:var(--muted)">San Francisco · Weekend 1</div>
-      </div>
-    </div>
-
-    <!-- Train warning -->
-    <div class="notice" style="background:rgba(248,113,113,.07);border-color:rgba(248,113,113,.25);color:#f87171;margin-bottom:14px">
-      ⚠️ <strong>Train needs rescheduling</strong> — Current booking (06:28 AM Jul 20) is ~4 hours after the last festival shuttle. Since flight home isn't until Jul 21 11:20 AM, he can take any afternoon train on Jul 20 instead.
-    </div>
-
-    <!-- Outbound: SFO → AMS -->
-    <div class="flight-card">
-      <div class="flight-header">
-        <span class="badge bb">United · UA 968</span>
-        <span class="badge bp">GM622H</span>
-      </div>
-      <div class="flight-route">
-        <div>
-          <div class="iata">SFO</div>
-          <div class="city-label">San Francisco</div>
-        </div>
-        <div class="route-mid"><div class="route-line">✈️</div></div>
-        <div>
-          <div class="iata">AMS</div>
-          <div class="city-label right">Amsterdam</div>
-        </div>
-      </div>
-      <div class="flight-tags">
-        <span class="tag">📅 Wed, Jul 15</span>
-        <span class="tag">🛫 2:55 PM → Thu 10:20 AM</span>
-        <span class="tag">Polaris Business · Seat 07L</span>
-        <span class="tag">Award</span>
-        <a href="https://www.united.com/en/us/manageres/mytrips" target="_blank"><span class="tag">United ↗</span></a>
-      </div>
-    </div>
-
-    <!-- Train Antwerp → AMS (flagged) -->
-    <div class="flight-card" style="border-color:rgba(248,113,113,.3)">
-      <div class="flight-header">
-        <span class="badge bb">RailClick Train</span>
-        <span style="display:flex;align-items:center;gap:6px">
-          <span class="badge" style="background:rgba(248,113,113,.15);color:#f87171">Ref 2407447</span>
-          <span class="badge" style="background:rgba(248,113,113,.15);color:#f87171">⚠️ Reschedule</span>
-        </span>
-      </div>
-      <div class="flight-route">
-        <div>
-          <div class="iata" style="font-size:18px">Antwerp</div>
-          <div class="city-label">Centraal</div>
-        </div>
-        <div class="route-mid"><div class="route-line">🚂</div></div>
-        <div>
-          <div class="iata" style="font-size:18px">Amsterdam</div>
-          <div class="city-label right">Centraal</div>
-        </div>
-      </div>
-      <div class="flight-tags">
-        <span class="tag" style="color:#f87171">📅 Mon, Jul 20</span>
-        <span class="tag" style="color:#f87171">🚂 06:28 → 07:50 ⚠️</span>
-        <span class="tag">1h 22m · Direct</span>
-        <a href="https://www.railclick.com" target="_blank"><span class="tag">RailClick ↗</span></a>
-      </div>
-    </div>
-
-    <!-- Return: AMS → BOS -->
-    <div class="flight-card">
-      <div class="flight-header">
-        <span class="badge bb">JetBlue · B6 0032</span>
-        <span class="badge bp">KTJBUQ</span>
-      </div>
-      <div class="flight-route">
-        <div>
-          <div class="iata">AMS</div>
-          <div class="city-label">Amsterdam</div>
-        </div>
-        <div class="route-mid"><div class="route-line">✈️</div></div>
-        <div>
-          <div class="iata">BOS</div>
-          <div class="city-label right">Boston</div>
-        </div>
-      </div>
-      <div class="flight-tags">
-        <span class="tag">📅 Tue, Jul 21</span>
-        <span class="tag">🛫 11:20 AM → 1:31 PM</span>
-        <span class="tag">Mint · Seat 4F</span>
-        <a href="https://www.jetblue.com/manage-trips" target="_blank"><span class="tag">JetBlue ↗</span></a>
-      </div>
-    </div>
-
-    <!-- Return: BOS → SFO -->
-    <div class="flight-card">
-      <div class="flight-header">
-        <span class="badge bb">JetBlue · B6 0733</span>
-        <span class="badge bp">KTJBUQ</span>
-      </div>
-      <div class="flight-route">
-        <div>
-          <div class="iata">BOS</div>
-          <div class="city-label">Boston</div>
-        </div>
-        <div class="route-mid"><div class="route-line">✈️</div></div>
-        <div>
-          <div class="iata">SFO</div>
-          <div class="city-label right">San Francisco</div>
-        </div>
-      </div>
-      <div class="flight-tags">
-        <span class="tag">📅 Tue, Jul 21</span>
-        <span class="tag">🛫 5:00 PM (T-C) → 8:34 PM (T-1)</span>
-        <span class="tag">Mint · Seat 4A</span>
-        <a href="https://www.jetblue.com/manage-trips" target="_blank"><span class="tag">JetBlue ↗</span></a>
-      </div>
-    </div>
-
-    <!-- BOS connection note -->
-    <div style="background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:12px 14px;font-size:12px;color:var(--muted)">
-      <span style="color:var(--accent);font-weight:600">⏱ Boston connection</span> — Arrives 1:31 PM, departs 5:00 PM · <strong style="color:var(--text)">3h 29m</strong> · Terminal C → Terminal C
-    </div>
-
-    <!-- Divider -->
-    <div style="border-top:1px solid var(--border);margin:24px 0"></div>
-
-    <!-- Connor header -->
-    <div style="display:flex;align-items:center;gap:12px;margin-bottom:14px">
-      <div style="width:42px;height:42px;border-radius:50%;background:var(--surface2);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0">🧑</div>
-      <div>
-        <div style="font-size:15px;font-weight:700">Connor Caborn</div>
-        <div style="font-size:12px;color:var(--muted)">Calgary · Weekend 1</div>
-      </div>
-    </div>
-
-    <!-- Outbound: YYC → CDG -->
-    <div class="flight-card">
-      <div class="flight-header">
-        <span class="badge bb">WestJet · WS 10</span>
-      </div>
-      <div class="flight-route">
-        <div>
-          <div class="iata">YYC</div>
-          <div class="city-label">Calgary</div>
-        </div>
-        <div class="route-mid"><div class="route-line">✈️</div></div>
-        <div>
-          <div class="iata">CDG</div>
-          <div class="city-label right">Paris</div>
-        </div>
-      </div>
-      <div class="flight-tags">
-        <span class="tag">📅 Wed, Jul 15</span>
-        <span class="tag">🛫 19:10</span>
-      </div>
-    </div>
-
-    <!-- Same Eurostar -->
-    <div class="flight-card">
-      <div class="flight-header">
-        <span class="badge bb">Eurostar</span>
-        <span class="badge bg">Same train as Hans</span>
-      </div>
-      <div class="flight-route">
-        <div>
-          <div class="iata" style="font-size:18px">Paris</div>
-          <div class="city-label">Gare du Nord</div>
-        </div>
-        <div class="route-mid"><div class="route-line">🚄</div></div>
-        <div>
-          <div class="iata" style="font-size:18px">Brussels</div>
-          <div class="city-label right">Midi / Zuid</div>
-        </div>
-      </div>
-      <div class="flight-tags">
-        <span class="tag">📅 Thu, Jul 16</span>
-        <span class="tag">🚄 14:22 → 15:44</span>
-        <span class="tag">1h 22m · Direct</span>
-      </div>
-    </div>
-
-    <!-- Same Ryanair to Palma -->
-    <div class="flight-card">
-      <div class="flight-header">
-        <span class="badge bb">Ryanair · FR 7837</span>
-        <span class="badge bg">Same flight as Hans</span>
-      </div>
-      <div class="flight-route">
-        <div>
-          <div class="iata">CRL</div>
-          <div class="city-label">Brussels</div>
-        </div>
-        <div class="route-mid"><div class="route-line">✈️</div></div>
-        <div>
-          <div class="iata">PMI</div>
-          <div class="city-label right">Palma</div>
-        </div>
-      </div>
-      <div class="flight-tags">
-        <span class="tag">📅 Mon, Jul 20</span>
-        <span class="tag">🛫 15:10 → 17:20</span>
-        <span class="tag">2h 10m · Nonstop</span>
-      </div>
-    </div>
-
-    <!-- Return: PMI → BCN -->
-    <div class="flight-card">
-      <div class="flight-header">
-        <span class="badge bb">Vueling · VY 3907</span>
-      </div>
-      <div class="flight-route">
-        <div>
-          <div class="iata">PMI</div>
-          <div class="city-label">Palma</div>
-        </div>
-        <div class="route-mid"><div class="route-line">✈️</div></div>
-        <div>
-          <div class="iata">BCN</div>
-          <div class="city-label right">Barcelona</div>
-        </div>
-      </div>
-      <div class="flight-tags">
-        <span class="tag">📅 Thu, Jul 23</span>
-        <span class="tag">🛫 07:20</span>
-        <span class="tag">Nonstop</span>
-      </div>
-    </div>
-
-    <!-- Return: BCN → home -->
-    <div class="flight-card">
-      <div class="flight-header">
-        <span class="badge bb">Air Canada · AC 821</span>
-      </div>
-      <div class="flight-route">
-        <div>
-          <div class="iata">BCN</div>
-          <div class="city-label">Barcelona</div>
-        </div>
-        <div class="route-mid"><div class="route-line">✈️</div></div>
-        <div>
-          <div class="iata" style="font-size:18px">🏠</div>
-          <div class="city-label right">Home</div>
-        </div>
-      </div>
-      <div class="flight-tags">
-        <span class="tag">📅 Thu, Jul 23</span>
-      </div>
-    </div>
-  </section>
-
 </main>
 
 <footer>Hans · Tomorrowland 2026 🎶</footer>
@@ -754,12 +663,22 @@ function goTo(id, btn) {
   document.querySelectorAll('.pill').forEach(p => p.classList.remove('active'));
   btn.classList.add('active');
 }
-const SECS = ['flights','hotels','festival','itinerary','map-sec','weather','crew'];
+const SECS = ['flights','hotels','festival','itinerary','map-sec','weather'];
 window.addEventListener('scroll', () => {
   let cur = SECS[0];
   SECS.forEach(id => { const el = document.getElementById(id); if (el && el.getBoundingClientRect().top < 100) cur = id; });
   document.querySelectorAll('.pill').forEach(p => p.classList.toggle('active', p.dataset.section === cur));
 }, { passive: true });
+
+// ── CREW FILTER ───────────────────────────────────────────────────────────────
+function filterCrew(p, btn) {
+  document.querySelectorAll('.cpill').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  document.querySelectorAll('[data-person]').forEach(el => {
+    const persons = el.dataset.person.split(' ');
+    el.style.display = (p === 'all' || persons.includes(p)) ? '' : 'none';
+  });
+}
 
 // ── ITINERARY ─────────────────────────────────────────────────────────────────
 const ITIN = [
