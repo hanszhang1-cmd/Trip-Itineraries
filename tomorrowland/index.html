@@ -165,6 +165,7 @@
     <button class="pill" data-section="itinerary" onclick="goTo('itinerary',this)">📅 Itinerary</button>
     <button class="pill" data-section="map-sec" onclick="goTo('map-sec',this)">🗺️ Map</button>
     <button class="pill" data-section="weather" onclick="goTo('weather',this)">🌤️ Weather</button>
+    <button class="pill" data-section="crew" onclick="goTo('crew',this)">👥 Crew</button>
   </div>
 </nav>
 
@@ -488,6 +489,134 @@
     </div>
   </section>
 
+  <!-- ── CREW ── -->
+  <section id="crew">
+    <div class="sec-title">👥 Crew</div>
+
+    <!-- Gurchetan header -->
+    <div style="display:flex;align-items:center;gap:12px;margin-bottom:14px">
+      <div style="width:42px;height:42px;border-radius:50%;background:var(--surface2);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0">🧑</div>
+      <div>
+        <div style="font-size:15px;font-weight:700">Gurchetan Dhillon</div>
+        <div style="font-size:12px;color:var(--muted)">San Francisco · Weekend 1</div>
+      </div>
+    </div>
+
+    <!-- Train warning -->
+    <div class="notice" style="background:rgba(248,113,113,.07);border-color:rgba(248,113,113,.25);color:#f87171;margin-bottom:14px">
+      ⚠️ <strong>Train needs rescheduling</strong> — Current booking (06:28 AM Jul 20) is ~4 hours after the last festival shuttle. Since flight home isn't until Jul 21 11:20 AM, he can take any afternoon train on Jul 20 instead.
+    </div>
+
+    <!-- Outbound: SFO → AMS -->
+    <div class="flight-card">
+      <div class="flight-header">
+        <span class="badge bb">United · UA 968</span>
+        <span class="badge bp">GM622H</span>
+      </div>
+      <div class="flight-route">
+        <div>
+          <div class="iata">SFO</div>
+          <div class="city-label">San Francisco</div>
+        </div>
+        <div class="route-mid"><div class="route-line">✈️</div></div>
+        <div>
+          <div class="iata">AMS</div>
+          <div class="city-label right">Amsterdam</div>
+        </div>
+      </div>
+      <div class="flight-tags">
+        <span class="tag">📅 Wed, Jul 15</span>
+        <span class="tag">🛫 2:55 PM → Thu 10:20 AM</span>
+        <span class="tag">Polaris Business · Seat 07L</span>
+        <span class="tag">Award</span>
+        <a href="https://www.united.com/en/us/manageres/mytrips" target="_blank"><span class="tag">United ↗</span></a>
+      </div>
+    </div>
+
+    <!-- Train Antwerp → AMS (flagged) -->
+    <div class="flight-card" style="border-color:rgba(248,113,113,.3)">
+      <div class="flight-header">
+        <span class="badge bb">RailClick Train</span>
+        <span style="display:flex;align-items:center;gap:6px">
+          <span class="badge" style="background:rgba(248,113,113,.15);color:#f87171">Ref 2407447</span>
+          <span class="badge" style="background:rgba(248,113,113,.15);color:#f87171">⚠️ Reschedule</span>
+        </span>
+      </div>
+      <div class="flight-route">
+        <div>
+          <div class="iata" style="font-size:18px">Antwerp</div>
+          <div class="city-label">Centraal</div>
+        </div>
+        <div class="route-mid"><div class="route-line">🚂</div></div>
+        <div>
+          <div class="iata" style="font-size:18px">Amsterdam</div>
+          <div class="city-label right">Centraal</div>
+        </div>
+      </div>
+      <div class="flight-tags">
+        <span class="tag" style="color:#f87171">📅 Mon, Jul 20</span>
+        <span class="tag" style="color:#f87171">🚂 06:28 → 07:50 ⚠️</span>
+        <span class="tag">1h 22m · Direct</span>
+        <a href="https://www.railclick.com" target="_blank"><span class="tag">RailClick ↗</span></a>
+      </div>
+    </div>
+
+    <!-- Return: AMS → BOS -->
+    <div class="flight-card">
+      <div class="flight-header">
+        <span class="badge bb">JetBlue · B6 0032</span>
+        <span class="badge bp">KTJBUQ</span>
+      </div>
+      <div class="flight-route">
+        <div>
+          <div class="iata">AMS</div>
+          <div class="city-label">Amsterdam</div>
+        </div>
+        <div class="route-mid"><div class="route-line">✈️</div></div>
+        <div>
+          <div class="iata">BOS</div>
+          <div class="city-label right">Boston</div>
+        </div>
+      </div>
+      <div class="flight-tags">
+        <span class="tag">📅 Tue, Jul 21</span>
+        <span class="tag">🛫 11:20 AM → 1:31 PM</span>
+        <span class="tag">Mint · Seat 4F</span>
+        <a href="https://www.jetblue.com/manage-trips" target="_blank"><span class="tag">JetBlue ↗</span></a>
+      </div>
+    </div>
+
+    <!-- Return: BOS → SFO -->
+    <div class="flight-card">
+      <div class="flight-header">
+        <span class="badge bb">JetBlue · B6 0733</span>
+        <span class="badge bp">KTJBUQ</span>
+      </div>
+      <div class="flight-route">
+        <div>
+          <div class="iata">BOS</div>
+          <div class="city-label">Boston</div>
+        </div>
+        <div class="route-mid"><div class="route-line">✈️</div></div>
+        <div>
+          <div class="iata">SFO</div>
+          <div class="city-label right">San Francisco</div>
+        </div>
+      </div>
+      <div class="flight-tags">
+        <span class="tag">📅 Tue, Jul 21</span>
+        <span class="tag">🛫 5:00 PM (T-C) → 8:34 PM (T-1)</span>
+        <span class="tag">Mint · Seat 4A</span>
+        <a href="https://www.jetblue.com/manage-trips" target="_blank"><span class="tag">JetBlue ↗</span></a>
+      </div>
+    </div>
+
+    <!-- BOS connection note -->
+    <div style="background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:12px 14px;font-size:12px;color:var(--muted)">
+      <span style="color:var(--accent);font-weight:600">⏱ Boston connection</span> — Arrives 1:31 PM, departs 5:00 PM · <strong style="color:var(--text)">3h 29m</strong> · Terminal C → Terminal C
+    </div>
+  </section>
+
 </main>
 
 <footer>Hans · Tomorrowland 2026 🎶</footer>
@@ -499,7 +628,7 @@ function goTo(id, btn) {
   document.querySelectorAll('.pill').forEach(p => p.classList.remove('active'));
   btn.classList.add('active');
 }
-const SECS = ['flights','hotels','festival','itinerary','map-sec','weather'];
+const SECS = ['flights','hotels','festival','itinerary','map-sec','weather','crew'];
 window.addEventListener('scroll', () => {
   let cur = SECS[0];
   SECS.forEach(id => { const el = document.getElementById(id); if (el && el.getBoundingClientRect().top < 100) cur = id; });
